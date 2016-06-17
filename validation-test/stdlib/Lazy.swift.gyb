@@ -9,7 +9,11 @@
 // See http://swift.org/CONTRIBUTORS.txt for the list of Swift project authors
 //
 //===----------------------------------------------------------------------===//
-// RUN: %target-run-simple-swiftgyb
+// RUN: rm -rf %t
+// RUN: mkdir -p %t
+// RUN: %S/../../utils/gyb %s -o %t/Lazy.swift
+// RUN: %S/../../utils/line-directive %t/Lazy.swift -- %target-build-swift %t/Lazy.swift -o %t/a.out
+// RUN: %S/../../utils/line-directive %t/Lazy.swift -- %target-run %t/a.out
 // REQUIRES: executable_test
 
 import StdlibUnittest

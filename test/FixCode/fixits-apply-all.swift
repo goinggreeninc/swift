@@ -17,6 +17,3 @@ func foo() -> Int {
 func goo(_ e: ErrorProtocol) {
 	
 }
-
-@warn_unused_result(message="test message")
-func warn_unused_result_removal() -> Int { return 5 }

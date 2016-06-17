@@ -7,6 +7,10 @@
 
 // RUN: not %target-swift-frontend %s -parse
 
+// REQUIRES: asserts
+// SR-1584
+// XFAIL: objc_interop
+
 }
 struct S {
 static let i: B<Q<T where A"""

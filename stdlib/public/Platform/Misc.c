@@ -14,7 +14,6 @@
 #include <semaphore.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/ioctl.h>
 
 #include "swift/Runtime/Config.h"
 
@@ -50,18 +49,6 @@ extern int _swift_Platform_fcntlPtr(int fd, int cmd, void* ptr) {
   return fcntl(fd, cmd, ptr);
 }
 
-SWIFT_CC(swift)
-extern int
-_swift_Platform_ioctl(int fd, unsigned long int request, int value) {
-  return ioctl(fd, request, value);
-}
-
-SWIFT_CC(swift)
-extern int
-_swift_Platform_ioctlPtr(int fd, unsigned long int request, void* ptr) {
-  return ioctl(fd, request, ptr);
-}
- 
 #if defined(__APPLE__)
 #define _REENTRANT
 #include <math.h>

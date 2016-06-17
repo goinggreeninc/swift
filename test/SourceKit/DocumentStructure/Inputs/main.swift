@@ -15,8 +15,7 @@ class Foo : Bar {
 class Foo2 {}
 
 class Foo3 {
-    @IBInspectable var testIBInspectable : Int
-    @GKInspectable var testGKInspectable : Int
+    @IBInspectable var testInspectable : Int
 }
 
 protocol MyProt {}

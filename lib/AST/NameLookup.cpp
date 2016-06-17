@@ -385,7 +385,7 @@ UnqualifiedLookup::UnqualifiedLookup(DeclName Name, DeclContext *DC,
   const SourceManager &SM = Ctx.SourceMgr;
   DebuggerClient *DebugClient = M.getDebugClient();
 
-  NamedDeclConsumer Consumer(Name, Results, IsTypeLookup);
+  NamedDeclConsumer Consumer(Name, Results);
 
   Optional<bool> isCascadingUse;
   if (IsKnownNonCascading)
@@ -530,8 +530,6 @@ UnqualifiedLookup::UnqualifiedLookup(DeclName Name, DeclContext *DC,
 
         if (AllowProtocolMembers)
           options |= NL_ProtocolMembers;
-        if (IsTypeLookup)
-          options |= NL_OnlyTypes;
 
         if (!ExtendedType)
           ExtendedType = ErrorType::get(Ctx);
@@ -1264,11 +1262,6 @@ bool DeclContext::lookupQualified(Type type,
     // Look for results within the current nominal type and its extensions.
     bool currentIsProtocol = isa<ProtocolDecl>(current);
     for (auto decl : current->lookupDirect(member)) {
-      // If we're performing a type lookup, don't even attempt to validate
-      // the decl if its not a type.
-      if ((options & NL_OnlyTypes) && !isa<TypeDecl>(decl))
-        continue;
-
       // Resolve the declaration signature when we find the
       // declaration.
       if (typeResolver && !decl->isBeingTypeChecked()) {

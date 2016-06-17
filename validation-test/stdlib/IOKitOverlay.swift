@@ -16,7 +16,7 @@ IOKitTests.test("IOReturn value") {
 }
 
 IOKitTests.test("IOReturn type") {
-  let manager = IOHIDManagerCreate(nil, 0)
+  let manager = IOHIDManagerCreate(nil, 0)!.takeRetainedValue()
   let result = IOHIDManagerClose(manager, 0)
   expectTrue(result.dynamicType == kIOReturnNotOpen.dynamicType)
 }

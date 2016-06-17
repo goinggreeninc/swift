@@ -1,8 +1,4 @@
 %{
-# This is a template of validation-test/stdlib/Slice/*.swift
-#
-# cd validation-test/stdlib/Slice
-# ../../../utils/gyb --line-directive="" Inputs/Template.swift.gyb | ../../../utils/split_file.py
 
 from gyb_stdlib_support import (
     TRAVERSALS,
@@ -46,7 +42,7 @@ def all_tests():
       ('WithPrefixAndSuffix', '[-9999, -9998, -9997, -9996, -9995]',
        '[-9994, -9993, -9992]')
     ]:
-      test.name = test.base_slice + '_Of_' + test.base + '_' + name + '.swift'
+      test.name = test.base_slice + '_Of_' + test.base + '_' + name + '.swift.gyb'
       test.prefix = prefix
       test.suffix
       yield test
@@ -71,7 +67,7 @@ def test_methods(test):
 }%
 
 % for test in all_tests():
-// BEGIN ${test.name}
+// Start of file: ${test.name}
 // -*- swift -*-
 
 //===----------------------------------------------------------------------===//
@@ -79,7 +75,11 @@ def test_methods(test):
 // Do Not Edit Directly!
 //===----------------------------------------------------------------------===//
 
-// RUN: %target-run-simple-swift
+// RUN: rm -rf %t
+// RUN: mkdir -p %t
+// RUN: %S/../../../utils/gyb %s -o %t/main.swift
+// RUN: %S/../../../utils/line-directive %t/main.swift -- %target-build-swift %t/main.swift -o %t/${test.name}.a.out
+// RUN: %S/../../../utils/line-directive %t/main.swift -- %target-run %t/${test.name}.a.out
 // REQUIRES: executable_test
 
 // FIXME: the test is too slow when the standard library is not optimized.
@@ -181,4 +181,6 @@ SliceTests.add${method}Tests(
 % end
 
 runAllTests()
+// End of file: ${test.name}
 % end
+

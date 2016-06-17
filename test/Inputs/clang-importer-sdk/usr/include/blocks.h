@@ -9,13 +9,7 @@
 
 @end
 
-typedef void (^my_block_t)(void);
-
-my_block_t blockWithoutNullability();
-my_block_t __nonnull blockWithNonnull();
-my_block_t __null_unspecified blockWithNullUnspecified();
-my_block_t __nullable blockWithNullable();
-
-void accepts_block(my_block_t) __attribute__((nonnull));
-void accepts_noescape_block(__attribute__((noescape)) my_block_t) __attribute__((nonnull));
-
+dispatch_block_t blockWithoutNullability();
+dispatch_block_t __nonnull blockWithNonnull();
+dispatch_block_t __null_unspecified blockWithNullUnspecified();
+dispatch_block_t __nullable blockWithNullable();

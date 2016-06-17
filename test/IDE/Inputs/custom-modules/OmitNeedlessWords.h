@@ -7,12 +7,6 @@
 @interface SEGreebieArray : NSObject
 @end
 
-typedef NS_OPTIONS(NSUInteger, OMWWobbleOptions) {
-  OMWWobbleSideToSide = 0x01,
-  OMWWobbleBackAndForth = 0x02,
-  OMWWobbleToXMLHex = 0x04
-};
-
 @interface OmitNeedlessWords : NSObject
 -(void)jumpToUrl:(nonnull NSURL *)url;
 -(BOOL)objectIsCompatibleWithObject:(nonnull id)other;
@@ -40,8 +34,6 @@ typedef NS_OPTIONS(NSUInteger, OMWWobbleOptions) {
 -(void)doSomethingSeparatedBy:(NSInteger)value;
 +(nonnull OmitNeedlessWords *)currentOmitNeedlessWords;
 +(void)setCurrentOmitNeedlessWords:(nonnull OmitNeedlessWords *)value;
--(void)compilerPlugInValue:(NSInteger)value;
--(void)wobbleWithOptions:(OMWWobbleOptions)options;
 @end
 
 @interface ABCDoodle : NSObject

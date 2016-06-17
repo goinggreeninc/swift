@@ -53,8 +53,7 @@ def _coerce_dry_run(dry_run_override):
 def _echo_command(dry_run, command, env=None, prompt="+ "):
     output = []
     if env is not None:
-        output += ['env'] + [_quote("%s=%s" % (k, v))
-                             for (k, v) in sorted(env.items())]
+        output += ['env'] + [_quote("%s=%s" % (k, v)) for k, v in env]
     output += [_quote(arg) for arg in command]
     file = sys.stderr
     if dry_run:

@@ -5,7 +5,11 @@
 // Do Not Edit Directly!
 //===----------------------------------------------------------------------===//
 
-// RUN: %target-run-simple-swift
+// RUN: rm -rf %t
+// RUN: mkdir -p %t
+// RUN: %S/../../../utils/gyb %s -o %t/main.swift
+// RUN: %S/../../../utils/line-directive %t/main.swift -- %target-build-swift %t/main.swift -o %t/DefaultedRangeReplaceableCollection.swift.a.out
+// RUN: %S/../../../utils/line-directive %t/main.swift -- %target-run %t/DefaultedRangeReplaceableCollection.swift.a.out
 // REQUIRES: executable_test
 
 import StdlibUnittest

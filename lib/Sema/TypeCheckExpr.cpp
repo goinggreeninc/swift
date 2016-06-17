@@ -973,10 +973,13 @@ namespace {
       if (!validateForwardCapture(DRE->getDecl()))
         return { false, DRE };
 
-      bool isInOut = D->hasType() && D->getInterfaceType()->is<InOutType>();
+      bool isInOut = D->hasInterfaceType()
+                     && isa<InOutType>(D->getInterfaceType().getPointer());
       bool isNested = false;
-      if (auto f = AFR.getAbstractFunctionDecl())
-        isNested = f->getDeclContext()->isLocalContext();
+      if (auto f = AFR.getAbstractFunctionDecl()) {
+           isNested = f->getDeclContext()->getContextKind() ==
+        DeclContextKind::AbstractFunctionDecl;
+      }
 
       if (isInOut && !AFR.isKnownNoEscape() && !isNested) {
         if (D->getNameStr() == "self") {
@@ -1277,14 +1280,19 @@ void TypeChecker::computeCaptures(AnyFunctionRef AFR) {
     }
   }
 
+  // Since nested generic functions are not supported yet, the only case where
+  // generic parameters can be captured is by closures and non-generic local
+  // functions.
+  //
+  // So we only set GenericParamCaptures if we have a closure, or a
+  // non-generic function defined inside a local context.
   auto *AFD = AFR.getAbstractFunctionDecl();
-  if (AFD) {
-    if (AFD->getGenericParams())
-      AFR.getCaptureInfo().setGenericParamCaptures(true);
+  if (!AFD ||
+      (!AFD->getGenericParams() &&
+       AFD->getDeclContext()->isLocalContext())) {
+    AFR.getCaptureInfo()
+      .setGenericParamCaptures(GenericParamCaptureLoc.isValid());
   }
-
-  if (GenericParamCaptureLoc.isValid())
-    AFR.getCaptureInfo().setGenericParamCaptures(true);
 
   if (Captures.empty())
     AFR.getCaptureInfo().setCaptures(None);

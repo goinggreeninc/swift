@@ -36,8 +36,6 @@ public:
   virtual bool recordRelatedEntity(const IndexSymbol &symbol) = 0;
   virtual bool finishSourceEntity(SymbolKind kind, SymbolSubKindSet subKinds,
                                   SymbolRoleSet roles) = 0;
-
-  virtual void finish() {}
 };
 
 } // end namespace index

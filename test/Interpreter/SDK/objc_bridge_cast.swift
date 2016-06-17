@@ -104,11 +104,11 @@ func testConditionalValueToObjectBridging() {
     print("Not an NSCoding")
   }
 
-  // CHECK-NEXT: XMLParserDelegate
-  if let delegate = (genericConditionalCast(array) as XMLParserDelegate?) {
+  // CHECK-NEXT: NSXMLParserDelegate
+  if let delegate = (genericConditionalCast(array) as NSXMLParserDelegate?) {
     print("\(delegate)")
   } else {
-    print("Not an XMLParserDelegate")
+    print("Not an NSXMLParserDelegate")
   }
 
   // Conditional bridging (unrelated class)

@@ -92,8 +92,8 @@ class NinjaTestCase(unittest.TestCase):
         if platform.system() == "Darwin":
             expect_env = (
                 "env "
-                "'CFLAGS=-isysroot {sysroot} -mmacosx-version-min=10.9' "
                 "CXX={cxx} "
+                "'CFLAGS=-isysroot {sysroot} -mmacosx-version-min=10.9' "
                 "LDFLAGS=-mmacosx-version-min=10.9 "
             ).format(
                 cxx=self.toolchain.cxx,

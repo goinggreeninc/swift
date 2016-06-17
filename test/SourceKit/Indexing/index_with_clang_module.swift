@@ -1,4 +1,3 @@
-// REQUIRES: objc_interop
 // RUN: %sourcekitd-test -req=index %s -- %s -F %S/../Inputs/libIDE-mock-sdk \
 // RUN:         %mcp_opt %clang-importer-sdk | FileCheck %s
 

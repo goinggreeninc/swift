@@ -325,10 +325,8 @@ static RValue emitCollectionDowncastExpr(SILGenFunction &SGF,
   }
 
   auto fnArcheTypes = fn->getGenericParams()->getPrimaryArchetypes();
-  auto fromSubsts = fromCollection->gatherAllSubstitutions(
-      SGF.SGM.SwiftModule, nullptr);
-  auto toSubsts = toCollection->gatherAllSubstitutions(
-      SGF.SGM.SwiftModule, nullptr);
+  auto fromSubsts = fromCollection->getSubstitutions(SGF.SGM.SwiftModule,nullptr);
+  auto toSubsts = toCollection->getSubstitutions(SGF.SGM.SwiftModule,nullptr);
   assert(fnArcheTypes.size() == fromSubsts.size() + toSubsts.size() &&
          "wrong number of generic collection parameters");
   (void) fnArcheTypes;

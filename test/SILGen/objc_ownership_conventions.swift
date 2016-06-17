@@ -73,11 +73,20 @@ func test8(_ g: Gizmo) -> Gizmo {
   return g.clone()
   // CHECK: bb0([[G:%.*]] : $Gizmo):
   // CHECK-NOT:  retain
-  // CHECK:      [[METHOD:%.*]] = class_method [volatile] [[G]] : {{.*}}, #Gizmo.clone!1.foreign
-  // CHECK-NOT:  retain [[RESULT]]
-  // CHECK:      [[RESULT:%.*]] = unchecked_enum_data
-  // CHECK-NOT:  retain [[RESULT]]
-  // CHECK:      return [[RESULT]]
+  // CHECK: alloc_stack $ImplicitlyUnwrappedOptional<Gizmo>
+  // CHECK-NEXT: [[METHOD:%.*]] = class_method [volatile] [[G]] : {{.*}}, #Gizmo.clone!1.foreign
+  // CHECK-NEXT: [[RESULT:%.*]] = apply [[METHOD]]([[G]])
+  // CHECK-NEXT: store
+  // CHECK-NEXT: function_ref
+  // CHECK-NEXT: function_ref @_TFs45_stdlib_ImplicitlyUnwrappedOptional_unwrappedurFGSQx_x
+  // CHECK-NEXT: alloc_stack
+  // CHECK-NEXT: apply
+  // CHECK-NEXT: [[RESULT:%.*]] = load
+  // CHECK-NEXT: dealloc_stack
+  // CHECK-NOT: release [[G]]
+  // CHECK-NEXT: dealloc_stack
+  // CHECK-NEXT: release [[G]]
+  // CHECK-NEXT: return [[RESULT]]
 }
 // duplicate returns an autoreleased object at +0.
 // CHECK-LABEL: sil hidden  @_TF26objc_ownership_conventions5test9
@@ -85,12 +94,20 @@ func test9(_ g: Gizmo) -> Gizmo {
   return g.duplicate()
   // CHECK: bb0([[G:%.*]] : $Gizmo):
   // CHECK-NOT:      retain [[G:%0]]
-  // CHECK: [[METHOD:%.*]] = class_method [volatile] [[G]] : {{.*}}, #Gizmo.duplicate!1.foreign
+  // CHECK: alloc_stack
+  // CHECK-NEXT: [[METHOD:%.*]] = class_method [volatile] [[G]] : {{.*}}, #Gizmo.duplicate!1.foreign
   // CHECK-NEXT: [[RESULT:%.*]] = apply [[METHOD]]([[G]])
-  // CHECK-NOT:  retain [[RESULT]]
-  // CHECK:      [[RESULT:%.*]] = unchecked_enum_data
-  // CHECK-NOT:  retain [[RESULT]]
-  // CHECK:      return [[RESULT]]
+  // CHECK-NEXT: store [[RESULT]]
+  // CHECK-NEXT: function_ref
+  // CHECK-NEXT: function_ref @_TFs45_stdlib_ImplicitlyUnwrappedOptional_unwrappedurFGSQx_x
+  // CHECK-NEXT: alloc_stack
+  // CHECK-NEXT: apply
+  // CHECK-NEXT: [[RESULT:%.*]] = load
+  // CHECK-NEXT: dealloc_stack
+  // CHECK-NOT: release [[G]]
+  // CHECK-NEXT: dealloc_stack
+  // CHECK-NEXT: release [[G]]
+  // CHECK-NEXT: return [[RESULT]]
 }
 
 // CHECK-LABEL: sil hidden @_TF26objc_ownership_conventions6test10
@@ -104,7 +121,9 @@ func test10(_ g: Gizmo) -> AnyClass {
   // CHECK:      [[OBJC:%.*]] = unchecked_enum_data [[OPT_OBJC]]
   // CHECK-NEXT: [[THICK:%.*]] = objc_to_thick_metatype [[OBJC]]
   // CHECK:      [[T0:%.*]] = enum $ImplicitlyUnwrappedOptional<AnyObject.Type>, #ImplicitlyUnwrappedOptional.some!enumelt.1, [[THICK]]
-  // CHECK:      [[RES:%.*]] = unchecked_enum_data
+  // CHECK:      [[T0:%.*]] = function_ref @_TFs45_stdlib_ImplicitlyUnwrappedOptional_unwrappedurFGSQx_x
+  // CHECK:      apply [[T0]]<AnyObject.Type>([[THICK_BUF:%[0-9]*]], {{.*}})
+  // CHECK-NEXT: [[RES:%.*]] = load [[THICK_BUF]]
   // CHECK:      strong_release [[G]] : $Gizmo
   // CHECK:      strong_release [[G]] : $Gizmo
   // CHECK-NEXT: return [[RES]] : $@thick AnyObject.Type
@@ -122,7 +141,9 @@ func test11(_ g: Gizmo) -> AnyClass {
   // CHECK:      [[OBJC:%.*]] = unchecked_enum_data [[OPT_OBJC]]
   // CHECK-NEXT: [[THICK:%.*]] = objc_to_thick_metatype [[OBJC]]
   // CHECK:      [[T0:%.*]] = enum $ImplicitlyUnwrappedOptional<AnyObject.Type>, #ImplicitlyUnwrappedOptional.some!enumelt.1, [[THICK]]
-  // CHECK:      [[RES:%.*]] = unchecked_enum_data
+  // CHECK:      [[T0:%.*]] = function_ref @_TFs45_stdlib_ImplicitlyUnwrappedOptional_unwrappedurFGSQx_x
+  // CHECK:      apply [[T0]]<AnyObject.Type>([[THICK_BUF:%[0-9]*]], {{.*}})
+  // CHECK-NEXT: [[RES:%.*]] = load [[THICK_BUF]]
   // CHECK:      strong_release [[G]] : $Gizmo
   // CHECK:      strong_release [[G]] : $Gizmo
   // CHECK-NEXT: return [[RES]] : $@thick AnyObject.Type

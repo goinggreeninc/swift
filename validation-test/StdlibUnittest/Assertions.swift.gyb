@@ -1,4 +1,9 @@
-// RUN: %target-run-simple-swiftgyb
+// RUN: rm -rf %t
+// RUN: mkdir -p %t
+// RUN: %S/../../utils/gyb %s -o %t/Assertions.swift
+// RUN: %S/../../utils/line-directive %t/Assertions.swift -- %target-build-swift %t/Assertions.swift -o %t/a.out
+//
+// RUN: %S/../../utils/line-directive %t/Assertions.swift -- %target-run %t/a.out
 // REQUIRES: executable_test
 
 import StdlibUnittest

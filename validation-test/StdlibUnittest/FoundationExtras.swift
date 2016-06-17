@@ -11,38 +11,38 @@ import StdlibUnittestFoundationExtras
 
 var FoundationExtrasTests = TestSuite("FoundationExtras")
 
-FoundationExtrasTests.test("withOverriddenLocaleCurrentLocale(Locale)") {
+FoundationExtrasTests.test("withOverriddenNSLocaleCurrentLocale(NSLocale)") {
   // Check two locales to make sure the behavior is correct even if one of
   // these locales happens to be the same as the actual current locale.
   do {
-    let result = withOverriddenLocaleCurrentLocale(
-      Locale(localeIdentifier: "en_US")) {
+    let result = withOverriddenNSLocaleCurrentLocale(
+      NSLocale(localeIdentifier: "en_US")) {
       () -> Int in
-      expectEqual("en_US", Locale.current().localeIdentifier)
+      expectEqual("en_US", NSLocale.current().localeIdentifier)
       return 42
     }
     expectEqual(42, result)
   }
   do {
-    let result = withOverriddenLocaleCurrentLocale(
-      Locale(localeIdentifier: "uk")) {
+    let result = withOverriddenNSLocaleCurrentLocale(
+      NSLocale(localeIdentifier: "uk")) {
       () -> Int in
-      expectEqual("uk", Locale.current().localeIdentifier)
+      expectEqual("uk", NSLocale.current().localeIdentifier)
       return 42
     }
     expectEqual(42, result)
   }
 }
 
-FoundationExtrasTests.test("withOverriddenLocaleCurrentLocale(Locale)/nested") {
-  withOverriddenLocaleCurrentLocale(
-    Locale(localeIdentifier: "uk")) {
+FoundationExtrasTests.test("withOverriddenNSLocaleCurrentLocale(NSLocale)/nested") {
+  withOverriddenNSLocaleCurrentLocale(
+    NSLocale(localeIdentifier: "uk")) {
     () -> Void in
 
     expectCrashLater()
 
-    withOverriddenLocaleCurrentLocale(
-      Locale(localeIdentifier: "uk")) {
+    withOverriddenNSLocaleCurrentLocale(
+      NSLocale(localeIdentifier: "uk")) {
       () -> Void in
 
       return ()
@@ -50,21 +50,21 @@ FoundationExtrasTests.test("withOverriddenLocaleCurrentLocale(Locale)/nested") {
   }
 }
 
-FoundationExtrasTests.test("withOverriddenLocaleCurrentLocale(String)") {
+FoundationExtrasTests.test("withOverriddenNSLocaleCurrentLocale(String)") {
   // Check two locales to make sure the behavior is correct even if one of
   // these locales happens to be the same as the actual current locale.
   do {
-    let result = withOverriddenLocaleCurrentLocale("en_US") {
+    let result = withOverriddenNSLocaleCurrentLocale("en_US") {
       () -> Int in
-      expectEqual("en_US", Locale.current().localeIdentifier)
+      expectEqual("en_US", NSLocale.current().localeIdentifier)
       return 42
     }
     expectEqual(42, result)
   }
   do {
-    let result = withOverriddenLocaleCurrentLocale("uk") {
+    let result = withOverriddenNSLocaleCurrentLocale("uk") {
       () -> Int in
-      expectEqual("uk", Locale.current().localeIdentifier)
+      expectEqual("uk", NSLocale.current().localeIdentifier)
       return 42
     }
     expectEqual(42, result)

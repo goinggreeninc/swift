@@ -29,9 +29,6 @@ func local_recursion(_ x: Int, y: Int) {
   // CHECK: apply [[MUTUALLY_RECURSIVE_REF]]([[X]], [[Y]], [[X]])
   mutually_recursive_1(x)
 
-  // CHECK: [[MUTUALLY_RECURSIVE_REF:%.*]] = function_ref [[MUTUALLY_RECURSIVE_1]]
-  _ = mutually_recursive_1
-
   func transitive_capture_1(_ a: Int) -> Int {
     return x + a
   }
@@ -98,7 +95,6 @@ func generic_local_recursion<T, U>(_ x: T, y: U) {
   }
 
   self_recursive(x)
-  _ = self_recursive
 
   func transitive_capture_1(_ a: T) -> U {
     return toggle(a, y)
@@ -108,19 +104,10 @@ func generic_local_recursion<T, U>(_ x: T, y: U) {
   }
 
   transitive_capture_2(y)
-  _ = transitive_capture_2
 
   func no_captures() {}
 
   no_captures()
-  _ = no_captures
-
-  func transitive_no_captures() {
-    no_captures()
-  }
-
-  transitive_no_captures()
-  _ = transitive_no_captures
 }
 
 func local_properties(_ x: Int, y: Int) -> Int {

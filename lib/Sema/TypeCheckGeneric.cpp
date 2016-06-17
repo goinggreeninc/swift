@@ -51,12 +51,12 @@ Type DependentGenericTypeResolver::resolveSelfAssociatedType(
 }
 
 Type DependentGenericTypeResolver::resolveTypeOfContext(DeclContext *dc) {
-  // FIXME: Should be the interface type of the extension.
-  return dc->getDeclaredInterfaceType();
-}
+  if (auto nominal = dyn_cast<NominalTypeDecl>(dc))
+    return nominal->getDeclaredInterfaceType();
 
-Type DependentGenericTypeResolver::resolveTypeOfDecl(TypeDecl *decl) {
-  return decl->getDeclaredInterfaceType();
+  // FIXME: Should be the interface type of the extension.
+  auto ext = dyn_cast<ExtensionDecl>(dc);
+  return ext->getExtendedType()->getAnyNominal()->getDeclaredInterfaceType();
 }
 
 Type GenericTypeToArchetypeResolver::resolveGenericTypeParamType(
@@ -88,10 +88,6 @@ Type GenericTypeToArchetypeResolver::resolveSelfAssociatedType(
 
 Type GenericTypeToArchetypeResolver::resolveTypeOfContext(DeclContext *dc) {
   return dc->getDeclaredTypeInContext();
-}
-
-Type GenericTypeToArchetypeResolver::resolveTypeOfDecl(TypeDecl *decl) {
-  return decl->getDeclaredType();
 }
 
 Type PartialGenericTypeToArchetypeResolver::resolveGenericTypeParamType(
@@ -131,11 +127,6 @@ Type PartialGenericTypeToArchetypeResolver::resolveSelfAssociatedType(
 Type
 PartialGenericTypeToArchetypeResolver::resolveTypeOfContext(DeclContext *dc) {
   return dc->getDeclaredTypeInContext();
-}
-
-Type
-PartialGenericTypeToArchetypeResolver::resolveTypeOfDecl(TypeDecl *decl) {
-  return decl->getDeclaredType();
 }
 
 Type CompleteGenericTypeResolver::resolveGenericTypeParamType(
@@ -224,12 +215,12 @@ Type CompleteGenericTypeResolver::resolveSelfAssociatedType(Type selfTy,
 }
 
 Type CompleteGenericTypeResolver::resolveTypeOfContext(DeclContext *dc) {
-  // FIXME: Should be the interface type of the extension.
-  return dc->getDeclaredInterfaceType();
-}
+  if (auto nominal = dyn_cast<NominalTypeDecl>(dc))
+    return nominal->getDeclaredInterfaceType();
 
-Type CompleteGenericTypeResolver::resolveTypeOfDecl(TypeDecl *decl) {
-  return decl->getDeclaredInterfaceType();
+  // FIXME: Should be the interface type of the extension.
+  auto ext = dyn_cast<ExtensionDecl>(dc);
+  return ext->getExtendedType()->getAnyNominal()->getDeclaredInterfaceType();
 }
 
 /// Check the generic parameters in the given generic parameter list (and its
@@ -582,15 +573,13 @@ void TypeChecker::configureInterfaceType(AbstractFunctionDecl *func) {
     }
 
   } else if (auto ctor = dyn_cast<ConstructorDecl>(func)) {
-    auto *dc = ctor->getDeclContext();
-
     // FIXME: shouldn't this just be
     // ctor->getDeclContext()->getDeclaredInterfaceType()?
-    if (dc->getAsProtocolOrProtocolExtensionContext()) {
-      funcTy = dc->getProtocolSelf()->getDeclaredType();
+    if (ctor->getDeclContext()->getAsProtocolOrProtocolExtensionContext()) {
+      funcTy = ctor->getDeclContext()->getProtocolSelf()->getDeclaredType();
     } else {
-      funcTy = dc->getAsNominalTypeOrNominalTypeExtensionContext()
-          ->getDeclaredInterfaceType();
+      funcTy = ctor->getExtensionType()->getAnyNominal()
+                 ->getDeclaredInterfaceType();
     }
     
     // Adjust result type for failability.
@@ -855,24 +844,22 @@ bool TypeChecker::checkGenericArguments(DeclContext *dc, SourceLoc loc,
 
   auto genericParams = genericSig->getGenericParams();
 
+  unsigned genericTypeDepth =
+      owner->getAnyNominal()->getGenericTypeContextDepth();
   unsigned count = 0;
 
-  // If the type is nested inside a generic function, skip
-  // substitutions from the outer context.
-  unsigned start = (genericParams.size() - genericArgs.size());
-
   for (auto gp : genericParams) {
-    if (count >= start) {
-      auto gpTy = gp->getCanonicalType()->castTo<GenericTypeParamType>();
-      substitutions[gpTy] = genericArgs[count - start];
-    }
-
-    count++;
+    // Skip parameters that were introduced by outer generic
+    // function signatures.
+    if (gp->getDecl()->getDepth() < genericTypeDepth)
+      continue;
+    auto gpTy = gp->getCanonicalType()->castTo<GenericTypeParamType>();
+    substitutions[gpTy] = genericArgs[count++];
   }
 
   // The number of generic type arguments being bound must be equal to the
   // total number of generic parameters in the current generic type context.
-  assert(count - start == genericArgs.size());
+  assert(count == genericArgs.size());
 
   // Check each of the requirements.
   Module *module = dc->getParentModule();

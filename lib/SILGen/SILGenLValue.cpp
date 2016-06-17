@@ -1657,10 +1657,6 @@ static LValue emitLValueForNonMemberVarDecl(SILGenFunction &gen,
       lv.add<OwnershipComponent>(typeData);
     break;
   }
-  
-  case AccessStrategy::BehaviorStorage:
-    // TODO: Behaviors aren't supported for non-instance properties yet.
-    llvm_unreachable("not implemented");
   }
 
   return lv;
@@ -1759,11 +1755,6 @@ static AccessKind getBaseAccessKind(AbstractStorageDecl *member,
     } else {
       return getBaseAccessKindForAccessor(member->getSetter());
     }
-    
-  case AccessStrategy::BehaviorStorage:
-    // We should only access the behavior storage for initialization purposes.
-    assert(accessKind == AccessKind::Write);
-    return AccessKind::Write;
   }
   llvm_unreachable("bad access strategy");
 }
@@ -1809,8 +1800,7 @@ void LValue::addMemberVarComponent(SILGenFunction &gen, SILLocation loc,
   }
 
   assert(strategy == AccessStrategy::Addressor ||
-         strategy == AccessStrategy::Storage ||
-         strategy == AccessStrategy::BehaviorStorage);
+         strategy == AccessStrategy::Storage);
 
   // Otherwise, the lvalue access is performed with a fragile element reference.
   // Find the substituted storage type.
@@ -1838,17 +1828,9 @@ void LValue::addMemberVarComponent(SILGenFunction &gen, SILLocation loc,
 
   auto typeData = getPhysicalStorageTypeData(gen.SGM, var, formalRValueType);
 
-  // For behavior initializations, we should have set up a marking proxy that
-  // replaces the access path.
-  if (strategy == AccessStrategy::BehaviorStorage) {
-    auto addr = gen.VarLocs.find(var);
-    assert(addr != gen.VarLocs.end() && addr->second.value);
-    Path.clear();
-    add<ValueComponent>(ManagedValue::forUnmanaged(addr->second.value),
-                        typeData);
   // For member variables, this access is done w.r.t. a base computation that
   // was already emitted.  This member is accessed off of it.
-  } else if (strategy == AccessStrategy::Addressor) {
+  if (strategy == AccessStrategy::Addressor) {
     add<AddressorComponent>(var, isSuper, /*direct*/ true, subs,
                             baseFormalType, typeData, varStorageType);
   } else if (baseFormalType->mayHaveSuperclass()) {
@@ -2025,8 +2007,10 @@ LValue SILGenFunction::emitPropertyLValue(SILLocation loc, ManagedValue base,
   SILGenLValue sgl(*this);
   LValue lv;
 
-  ArrayRef<Substitution> subs =
-      base.getType().gatherAllSubstitutions(SGM.M);
+  ArrayRef<Substitution> subs;
+  if (auto genericType = base.getType().getAs<BoundGenericType>()) {
+    subs = genericType->getSubstitutions(SGM.SwiftModule, nullptr);
+  }
 
   LValueTypeData baseTypeData = getValueTypeData(baseFormalType,
                                                  base.getValue());
@@ -2459,10 +2443,13 @@ void SILGenFunction::emitAssignToLValue(SILLocation loc, RValue &&src,
 
   // Peephole: instead of materializing and then assigning into a
   // translation component, untransform the value first.
-  while (dest.isLastComponentTranslation()) {
-    src = std::move(dest.getLastTranslationComponent())
-                 .untranslate(*this, loc, std::move(src));
-    dest.dropLastTranslationComponent();
+  if (dest.isLastComponentTranslation()) {
+    // Repeatedly reverse translation components.
+    do {
+      src = std::move(dest.getLastTranslationComponent())
+                   .untranslate(*this, loc, std::move(src));
+      dest.dropLastTranslationComponent();
+    } while (dest.isLastComponentTranslation());
   }
   
   // Resolve all components up to the last, keeping track of value-type logical

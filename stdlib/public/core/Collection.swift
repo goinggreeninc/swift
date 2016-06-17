@@ -873,6 +873,7 @@ extension Indexable {
   ///   `endIndex`.
   @inline(__always)
   public func formIndex(after i: inout Index) {
+    // FIXME: swift-3-indexing-model: tests.
     i = index(after: i)
   }
 
@@ -933,6 +934,7 @@ extension Indexable {
   ///   `RandomAccessCollection`; otherwise, O(*n*), where *n* is the absolute
   ///   value of `n`.
   public func index(_ i: Index, offsetBy n: IndexDistance) -> Index {
+    // FIXME: swift-3-indexing-model: tests.
     return self._advanceForward(i, by: n)
   }
 
@@ -983,6 +985,7 @@ extension Indexable {
   public func index(
     _ i: Index, offsetBy n: IndexDistance, limitedBy limit: Index
   ) -> Index? {
+    // FIXME: swift-3-indexing-model: tests.
     return self._advanceForward(i, by: n, limitedBy: limit)
   }
 
@@ -1055,6 +1058,7 @@ extension Indexable {
   ///   `RandomAccessCollection`; otherwise, O(*n*), where *n* is the
   ///   resulting distance.
   public func distance(from start: Index, to end: Index) -> IndexDistance {
+    // FIXME: swift-3-indexing-model: tests.
     _precondition(start <= end,
       "Only BidirectionalCollections can have end come before start")
 

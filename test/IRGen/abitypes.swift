@@ -420,7 +420,7 @@ class Foo {
   }
 
   // x86_64-macosx: define hidden i64 @_TToFC8abitypes3Foo17returnNSEnumValue{{.*}}(i8*, i8*) unnamed_addr {{.*}} {
-  dynamic func returnNSEnumValue() -> ByteCountFormatter.CountStyle {
+  dynamic func returnNSEnumValue() -> NSByteCountFormatterCountStyle {
     return .file
   }
 

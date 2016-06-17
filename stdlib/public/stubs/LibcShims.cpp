@@ -12,16 +12,11 @@
 
 #include <random>
 #include <type_traits>
-#if defined(_MSC_VER)
-#include <io.h>
-#else
 #include <unistd.h>
-#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include "../SwiftShims/LibcShims.h"
-#include "llvm/Support/DataTypes.h"
 
 using namespace swift;
 
@@ -33,11 +28,7 @@ void swift::_swift_stdlib_free(void *ptr) {
 }
 
 int swift::_swift_stdlib_putchar_unlocked(int c) {
-#if defined(_MSC_VER)
-  return _putc_nolock(c, stdout);
-#else
   return putchar_unlocked(c);
-#endif
 }
 
 __swift_size_t swift::_swift_stdlib_fwrite_stdout(const void *ptr,
@@ -57,28 +48,16 @@ int swift::_swift_stdlib_memcmp(const void *s1, const void *s2,
 
 __swift_ssize_t
 swift::_swift_stdlib_read(int fd, void *buf, __swift_size_t nbyte) {
-#if defined(_MSC_VER)
-  return _read(fd, buf, nbyte);
-#else
   return read(fd, buf, nbyte);
-#endif
 }
 
 __swift_ssize_t
 swift::_swift_stdlib_write(int fd, const void *buf, __swift_size_t nbyte) {
-#if defined(_MSC_VER)
-  return _write(fd, buf, nbyte);
-#else
   return write(fd, buf, nbyte);
-#endif
 }
 
 int swift::_swift_stdlib_close(int fd) {
-#if defined(_MSC_VER)
-  return _close(fd);
-#else
   return close(fd);
-#endif
 }
 
 #if defined(__APPLE__)
@@ -90,11 +69,6 @@ size_t swift::_swift_stdlib_malloc_size(const void *ptr) {
 #include <malloc.h>
 size_t swift::_swift_stdlib_malloc_size(const void *ptr) {
   return malloc_usable_size(const_cast<void *>(ptr));
-}
-#elif defined(_MSC_VER)
-#include <malloc.h>
-size_t _swift_stdlib_malloc_size(const void *ptr) {
-  return _msize(const_cast<void *>(ptr));
 }
 #elif defined(__FreeBSD__)
 #include <malloc_np.h>

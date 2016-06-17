@@ -2810,11 +2810,6 @@ namespace {
     Type visitOpenExistentialExpr(OpenExistentialExpr *expr) {
       llvm_unreachable("Already type-checked");
     }
-    
-    Type visitEnumIsCaseExpr(EnumIsCaseExpr *expr) {
-      // Should already be type-checked.
-      return expr->getType();
-    }
 
     Type visitEditorPlaceholderExpr(EditorPlaceholderExpr *E) {
       if (E->getTypeLoc().isNull()) {
@@ -3462,7 +3457,7 @@ void swift::collectDefaultImplementationForProtocolMembers(ProtocolDecl *PD,
                                                     VD->getFullName());
     if (Result.OtherViables.empty())
       continue;
-    if (!Result.Favored->getDeclContext()->isGenericContext())
+    if (!Result.Favored->getDeclContext()->isGenericTypeContext())
       continue;
     for (ValueDecl *Default : Result.OtherViables) {
       if (Default->getDeclContext()->isExtensionContext()) {

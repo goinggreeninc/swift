@@ -34,9 +34,7 @@
 #include "../SwiftShims/RuntimeShims.h"
 #include "Private.h"
 #include "swift/Runtime/Debug.h"
-#if SWIFT_OBJC_INTEROP
 #include <dlfcn.h>
-#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <unordered_map>

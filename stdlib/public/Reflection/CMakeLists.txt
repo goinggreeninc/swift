@@ -1,4 +1,4 @@
-add_swift_library(swiftReflection TARGET_LIBRARY FORCE_BUILD_FOR_HOST_SDK
+add_swift_library(swiftReflection TARGET_LIBRARY HOST_LIBRARY
   Demangle.cpp
   MetadataSource.cpp
   Remangle.cpp

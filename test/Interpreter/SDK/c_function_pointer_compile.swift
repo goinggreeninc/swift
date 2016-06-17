@@ -3,8 +3,8 @@
 
 // REQUIRES: objc_interop
 
-import Darwin
+import Dispatch
 
 func getAnyValue<T>(_ opt: T?) -> T { return opt! }
 
-qsort(getAnyValue(nil), 0, 0, getAnyValue(nil))
+dispatch_sync_f(getAnyValue(nil), getAnyValue(nil), getAnyValue(nil))

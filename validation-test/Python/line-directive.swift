@@ -1,1 +1,1 @@
-// RUN: %{python} %utils/line-directive
+// RUN: %{python} %S/../../utils/line-directive

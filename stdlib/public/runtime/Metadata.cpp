@@ -28,15 +28,8 @@
 #include <condition_variable>
 #include <new>
 #include <cctype>
-#if defined(_MSC_VER)
-#define WIN32_LEAN_AND_MEAN
-// Avoid defining macro max(), min() which conflict with std::max(), std::min()
-#define NOMINMAX
-#include <windows.h>
-#else
 #include <sys/mman.h>
 #include <unistd.h>
-#endif
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/Hashing.h"
 #include "ErrorObject.h"
@@ -63,56 +56,19 @@
 using namespace swift;
 using namespace metadataimpl;
 
-static uintptr_t swift_pageSize() {
-#if defined(__APPLE__)
-  return vm_page_size;
-#elif defined(_MSC_VER)
-  SYSTEM_INFO SystemInfo;
-  GetSystemInfo(&SystemInfo);
-  return SystemInfo.dwPageSize;
-#else
-  return sysconf(_SC_PAGESIZE);
-#endif
-}
-
-// allocate memory up to a nearby page boundary
-static void *swift_allocateMetadataRoundingToPage(size_t size) {
-  const uintptr_t PageSizeMask = SWIFT_LAZY_CONSTANT(swift_pageSize()) - 1;
-  size = (size + PageSizeMask) & ~PageSizeMask;
-#if defined(_MSC_VER)
-  auto mem = VirtualAlloc(
-      nullptr, size, MEM_TOP_DOWN | MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-#else
-  auto mem = mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE,
-                  VM_TAG_FOR_SWIFT_METADATA, 0);
-  if (mem == MAP_FAILED)
-    mem = nullptr;
-#endif
-  return mem;
-}
-
-// free memory allocated by swift_allocateMetadataRoundingToPage()
-static void swift_freeMetadata(void *addr, size_t size) {
-#if defined(_MSC_VER)
-  // On success, VirtualFree() returns nonzero, on failure 0 
-  int result = VirtualFree(addr, 0, MEM_RELEASE);
-  if (result == 0)
-    fatalError(/* flags = */ 0, "swift_freePage: VirtualFree() failed");
-#else
-  // On success, munmap() returns 0, on failure -1
-  int result = munmap(addr, size);
-  if (result != 0)
-    fatalError(/* flags = */ 0, "swift_freePage: munmap() failed");
-#endif
-}
-
 void *MetadataAllocator::alloc(size_t size) {
-  const uintptr_t PageSize = SWIFT_LAZY_CONSTANT(swift_pageSize());
+#if defined(__APPLE__)
+  const uintptr_t PageSizeMask = vm_page_mask;
+#else
+  static const uintptr_t PageSizeMask = sysconf(_SC_PAGESIZE) - 1;
+#endif
   // If the requested size is a page or larger, map page(s) for it
   // specifically.
-  if (LLVM_UNLIKELY(size >= PageSize)) {
-    void *mem = swift_allocateMetadataRoundingToPage(size);
-    if (!mem)
+  if (LLVM_UNLIKELY(size > PageSizeMask)) {
+    auto mem = mmap(nullptr, (size + PageSizeMask) & ~PageSizeMask,
+                    PROT_READ|PROT_WRITE, MAP_ANON|MAP_PRIVATE,
+                    VM_TAG_FOR_SWIFT_METADATA, 0);
+    if (mem == MAP_FAILED)
       crash("unable to allocate memory for metadata cache");
     return mem;
   }
@@ -124,13 +80,16 @@ void *MetadataAllocator::alloc(size_t size) {
   
     // If we wrap over the end of the page, allocate a new page.
     void *allocation = nullptr;
-    const uintptr_t PageSizeMask = PageSize - 1;
     if (LLVM_UNLIKELY(((uintptr_t)next & ~PageSizeMask)
                         != (((uintptr_t)end & ~PageSizeMask)))) {
       // Allocate a new page if we haven't already.
-      allocation = swift_allocateMetadataRoundingToPage(PageSize);
+      allocation = mmap(nullptr, PageSizeMask + 1,
+                        PROT_READ|PROT_WRITE,
+                        MAP_ANON|MAP_PRIVATE,
+                        VM_TAG_FOR_SWIFT_METADATA,
+                        /*offset*/ 0);
 
-      if (!allocation)
+      if (allocation == MAP_FAILED)
         crash("unable to allocate memory for metadata cache");
 
       next = (char*) allocation;
@@ -148,7 +107,7 @@ void *MetadataAllocator::alloc(size_t size) {
     // This potentially causes us to perform multiple mmaps under contention,
     // but it keeps the fast path pristine.
     if (allocation) {
-      swift_freeMetadata(allocation, PageSize);
+      munmap(allocation, PageSizeMask + 1);
     }
   }
 }

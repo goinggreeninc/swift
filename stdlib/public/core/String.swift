@@ -1008,7 +1008,7 @@ extension String {
     Builtin.unreachable()
   }
   
-  @available(*, unavailable, renamed: "remove(at:)")
+  @available(*, unavailable, renamed: "removeAt")
   public mutating func removeAtIndex(_ i: Index) -> Character {
     Builtin.unreachable()
   }
@@ -1030,7 +1030,7 @@ extension String {
 }
 
 extension Sequence where Iterator.Element == String {
-  @available(*, unavailable, renamed: "joined(separator:)")
+  @available(*, unavailable, renamed: "joined")
   public func joinWithSeparator(_ separator: String) -> String {
     Builtin.unreachable()
   }

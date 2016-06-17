@@ -1,34 +1,27 @@
-// RUN: %target-parse-verify-swift
+// RUN: %target-parse-verify-swift %clang-importer-sdk
 
 // REQUIRES: objc_interop
+
+// This test is deliberately using the importer SDK because not all SDKs have
+// the protocols underlying the dispatch types ultimately inheriting from
+// NSObjectProtocol.
 
 import Dispatch
 import Foundation
 
-func test1(_ queue: dispatch_queue_t) {} // expected-error {{'dispatch_queue_t' is unavailable}}
-func test2(_ queue: DispatchQueue) {
+func test(_ queue: dispatch_queue_t) {
   let base: NSObjectProtocol = queue
-  let _: DispatchObject = queue
+  let _: dispatch_object_t = queue
 
-  let _ = base as? DispatchQueue
+  let _ = base as? dispatch_queue_t
 
   // Make sure the dispatch types are actually distinct types!
-  let _ = queue as DispatchSource // expected-error {{cannot convert value of type 'DispatchQueue' to type 'DispatchSource' in coercion}}
-  let _ = base as DispatchSource // expected-error {{'NSObjectProtocol' is not convertible to 'DispatchSource'; did you mean to use 'as!' to force downcast?}}
+  let _ = queue as dispatch_source_t // expected-error {{'dispatch_queue_t' (aka 'OS_dispatch_queue') is not convertible to 'dispatch_source_t'}} {{17-19=as!}}
 }
-
-extension dispatch_queue_t {} // expected-error {{'dispatch_queue_t' is unavailable}}
 
 // Make sure you can extend a dispatch type via its common name.
-extension DispatchQueue {
-  func myAsync(_ block: () -> Void) {
-    async(execute: block)
+extension dispatch_queue_t {
+  func async(_ block: () -> Void) {
+    dispatch_async(self, block)
   }
 }
-
-func test_dispatch1(_ object: dispatch_object_t) {} // expected-error {{'dispatch_object_t' is unavailable}}
-func test_dispatch2(_ object: DispatchObject) {
-  dispatch_retain(object) // expected-error {{use of unresolved identifier 'dispatch_retain'}}
-  dispatch_release(object) // expected-error {{use of unresolved identifier 'dispatch_release'}}
-}
-

@@ -1,15 +1,15 @@
 // RUN: rm -rf %t
 // RUN: mkdir -p %t
 //
-// RUN: %gyb %s -o %t/main.swift
+// RUN: %S/../../utils/gyb %s -o %t/main.swift
 // RUN: if [ %target-runtime == "objc" ]; then \
 // RUN:   %target-clang -fobjc-arc %S/Inputs/SlurpFastEnumeration/SlurpFastEnumeration.m -c -o %t/SlurpFastEnumeration.o; \
-// RUN:   %line-directive %t/main.swift -- %target-build-swift %S/Inputs/DictionaryKeyValueTypes.swift %S/Inputs/DictionaryKeyValueTypesObjC.swift %t/main.swift -I %S/Inputs/SlurpFastEnumeration/ -Xlinker %t/SlurpFastEnumeration.o -o %t/Set -Xfrontend -disable-access-control; \
+// RUN:   %S/../../utils/line-directive %t/main.swift -- %target-build-swift %S/Inputs/DictionaryKeyValueTypes.swift %S/Inputs/DictionaryKeyValueTypesObjC.swift %t/main.swift -I %S/Inputs/SlurpFastEnumeration/ -Xlinker %t/SlurpFastEnumeration.o -o %t/Set -Xfrontend -disable-access-control; \
 // RUN: else \
-// RUN:   %line-directive %t/main.swift -- %target-build-swift %S/Inputs/DictionaryKeyValueTypes.swift %t/main.swift -o %t/Set -Xfrontend -disable-access-control; \
+// RUN:   %S/../../utils/line-directive %t/main.swift -- %target-build-swift %S/Inputs/DictionaryKeyValueTypes.swift %t/main.swift -o %t/Set -Xfrontend -disable-access-control; \
 // RUN: fi
 //
-// RUN: %line-directive %t/main.swift -- %target-run %t/Set
+// RUN: %S/../../utils/line-directive %t/main.swift -- %target-run %t/Set
 // REQUIRES: executable_test
 
 import StdlibUnittest
@@ -49,7 +49,10 @@ extension SetIterator where Element : TestProtocol1 {
   }
 }
 
-let hugeNumberArray = Array(0..<500)
+let hugeNumberArray = (0..<500).map {
+  (i: Int) -> Int in
+  return random()
+}
 
 var SetTestSuite = TestSuite("Set")
 

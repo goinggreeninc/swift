@@ -216,7 +216,6 @@ namespace {
     
     RValue visitDefaultValueExpr(DefaultValueExpr *E, SGFContext C);
     RValue visitAssignExpr(AssignExpr *E, SGFContext C);
-    RValue visitEnumIsCaseExpr(EnumIsCaseExpr *E, SGFContext C);
 
     RValue visitBindOptionalExpr(BindOptionalExpr *E, SGFContext C);
     RValue visitOptionalEvaluationExpr(OptionalEvaluationExpr *E,
@@ -284,10 +283,6 @@ ManagedValue SILGenFunction::emitLValueForDecl(SILLocation loc, VarDecl *var,
   case AccessStrategy::DirectToAccessor:
   case AccessStrategy::DispatchToAccessor:
     return ManagedValue();
-    
-  case AccessStrategy::BehaviorStorage:
-    // TODO: Behaviors aren't supported on non-instance properties yet.
-    llvm_unreachable("not implemented");
   }
   llvm_unreachable("bad access strategy");
 }
@@ -466,9 +461,6 @@ static SILDeclRef getRValueAccessorDeclRef(SILGenFunction &SGF,
                                            AbstractStorageDecl *storage,
                                            AccessStrategy strategy) {
   switch (strategy) {
-  case AccessStrategy::BehaviorStorage:
-    llvm_unreachable("shouldn't load an rvalue via behavior storage!");
-  
   case AccessStrategy::Storage:
     llvm_unreachable("should already have been filtered out!");
 
@@ -498,9 +490,6 @@ emitRValueWithAccessor(SILGenFunction &SGF, SILLocation loc,
   bool isDirectUse = (strategy == AccessStrategy::DirectToAccessor);
 
   switch (strategy) {
-  case AccessStrategy::BehaviorStorage:
-    llvm_unreachable("shouldn't load an rvalue via behavior storage!");
-  
   case AccessStrategy::Storage:
     llvm_unreachable("should already have been filtered out!");
 
@@ -1063,10 +1052,8 @@ visitCollectionUpcastConversionExpr(CollectionUpcastConversionExpr *E,
   }
   
   auto fnArcheTypes = fn->getGenericParams()->getPrimaryArchetypes();
-  auto fromSubsts = fromCollection->gatherAllSubstitutions(
-      SGF.SGM.SwiftModule, nullptr);
-  auto toSubsts = toCollection->gatherAllSubstitutions(
-      SGF.SGM.SwiftModule, nullptr);
+  auto fromSubsts = fromCollection->getSubstitutions(SGF.SGM.SwiftModule,nullptr);
+  auto toSubsts = toCollection->getSubstitutions(SGF.SGM.SwiftModule,nullptr);
   assert(fnArcheTypes.size() == fromSubsts.size() + toSubsts.size() &&
          "wrong number of generic collection parameters");
   (void) fnArcheTypes;
@@ -1438,38 +1425,10 @@ RValue RValueEmitter::visitIsExpr(IsExpr *E, SGFContext C) {
                          E->getCastTypeLoc().getType(), E->getCastKind());
 
   // Call the _getBool library intrinsic.
-  ASTContext &ctx = SGF.getASTContext();
+  ASTContext &ctx = SGF.SGM.M.getASTContext();
   auto result =
     SGF.emitApplyOfLibraryIntrinsic(E, ctx.getGetBoolDecl(nullptr), {},
                                     ManagedValue::forUnmanaged(isa),
-                                    C);
-  return result;
-}
-
-RValue RValueEmitter::visitEnumIsCaseExpr(EnumIsCaseExpr *E,
-                                          SGFContext C) {
-  ASTContext &ctx = SGF.getASTContext();
-  // Get the enum value.
-  auto subExpr = SGF.emitRValueAsSingleValue(E->getSubExpr(),
-                                SGFContext(SGFContext::AllowImmediatePlusZero));
-  // Test its case.
-  auto i1Ty = SILType::getBuiltinIntegerType(1, SGF.getASTContext());
-  auto t = SGF.B.createIntegerLiteral(E, i1Ty, 1);
-  auto f = SGF.B.createIntegerLiteral(E, i1Ty, 0);
-  
-  SILValue selected;
-  if (subExpr.getType().isAddress()) {
-    selected = SGF.B.createSelectEnumAddr(E, subExpr.getValue(), i1Ty, f,
-                                          {{E->getEnumElement(), t}});
-  } else {
-    selected = SGF.B.createSelectEnum(E, subExpr.getValue(), i1Ty, f,
-                                      {{E->getEnumElement(), t}});
-  }
-  
-  // Call the _getBool library intrinsic.
-  auto result =
-    SGF.emitApplyOfLibraryIntrinsic(E, ctx.getGetBoolDecl(nullptr), {},
-                                    ManagedValue::forUnmanaged(selected),
                                     C);
   return result;
 }
@@ -2045,7 +2004,7 @@ getMagicFunctionString(SILGenFunction &gen) {
 
 RValue RValueEmitter::
 visitMagicIdentifierLiteralExpr(MagicIdentifierLiteralExpr *E, SGFContext C) {
-  ASTContext &Ctx = SGF.getASTContext();
+  ASTContext &Ctx = SGF.SGM.M.getASTContext();
   SILType Ty = SGF.getLoweredLoadableType(E->getType());
   SourceLoc Loc;
   
@@ -3131,11 +3090,14 @@ RValue RValueEmitter::emitForceValue(SILLocation loc, Expr *E,
     return SGF.emitRValue(injection->getSubExpr(), C);
   }
 
-  // Otherwise, emit the optional and force its value out.
+  // Otherwise, emit the value into memory and use the optional intrinsic.
   const TypeLowering &optTL = SGF.getTypeLowering(E->getType());
-  ManagedValue opt = SGF.emitRValueAsSingleValue(E);
+  auto optTemp = SGF.emitTemporary(E, optTL);
+  SGF.emitExprInto(E, optTemp.get());
+
   ManagedValue V =
-    SGF.emitCheckedGetOptionalValueFrom(loc, opt, optTL, C);
+    SGF.emitCheckedGetOptionalValueFrom(loc,
+                                        optTemp->getManagedAddress(), optTL, C);
   return RValue(SGF, loc, valueType->getCanonicalType(), V);
 }
 

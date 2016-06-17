@@ -42,23 +42,23 @@
 
 // FOUNDATION-LABEL: {{^}}/// Aaa.  NSPotentiallyUnavailableOptions.  Bbb.
 // FOUNDATION-NEXT: {{^}}@available(OSX 10.51, *){{$}}
-// FOUNDATION-NEXT: {{^}}struct PotentiallyUnavailableOptions : OptionSet {{{$}}
+// FOUNDATION-NEXT: {{^}}struct NSPotentiallyUnavailableOptions : OptionSet {{{$}}
 
 // FOUNDATION-LABEL: {{^}}/// Aaa.  NSOptionsWithUnavailableElement.  Bbb.
-// FOUNDATION-NEXT: {{^}}struct OptionsWithUnavailableElement : OptionSet {{{$}}
+// FOUNDATION-NEXT: {{^}}struct NSOptionsWithUnavailableElement : OptionSet {{{$}}
 // FOUNDATION-NEXT: {{^}}  init(rawValue: UInt){{$}}
 // FOUNDATION-NEXT: {{^}}  let rawValue: UInt{{$}}
-// FOUNDATION-NEXT: {{^}}  static var first: OptionsWithUnavailableElement { get }{{$}}
-// FOUNDATION-NEXT: {{^}}  static var second: OptionsWithUnavailableElement { get }{{$}}
+// FOUNDATION-NEXT: {{^}}  static var first: NSOptionsWithUnavailableElement { get }{{$}}
+// FOUNDATION-NEXT: {{^}}  static var second: NSOptionsWithUnavailableElement { get }{{$}}
 // FOUNDATION-NEXT: {{^}}  @available(OSX 10.51, *){{$}}
-// FOUNDATION-NEXT: {{^}}  static var third: OptionsWithUnavailableElement { get }{{$}}
+// FOUNDATION-NEXT: {{^}}  static var third: NSOptionsWithUnavailableElement { get }{{$}}
 
 // FOUNDATION-LABEL: {{^}}/// Aaa.  NSUnavailableEnum.  Bbb.
 // FOUNDATION-NEXT: {{^}}@available(OSX 10.51, *){{$}}
-// FOUNDATION-NEXT: {{^}}enum UnavailableEnum : UInt {{{$}}
+// FOUNDATION-NEXT: {{^}}enum NSUnavailableEnum : UInt {{{$}}
 
 // FOUNDATION-LABEL: {{^}}/// Aaa.  NSEnumWithUnavailableElement.  Bbb.
-// FOUNDATION-NEXT: {{^}}enum EnumWithUnavailableElement : UInt {{{$}}
+// FOUNDATION-NEXT: {{^}}enum NSEnumWithUnavailableElement : UInt {{{$}}
 // FOUNDATION-NEXT: {{^}}  init?(rawValue: UInt){{$}}
 // FOUNDATION-NEXT: {{^}}  var rawValue: UInt { get }{{$}}
 // FOUNDATION-NEXT: {{^}}  case first{{$}}

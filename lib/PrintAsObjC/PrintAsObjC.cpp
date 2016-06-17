@@ -655,7 +655,7 @@ private:
         VD->getObjCGetterSelector() != ObjCSelector(ctx, 0, { objCName })) {
       os << ", getter=" << VD->getObjCGetterSelector().getString(buffer);
     }
-    if (isSettable) {
+    if (VD->isSettable(nullptr)) {
       if (hasReservedName ||
           VD->getObjCSetterSelector() !=
             VarDecl::getDefaultObjCSetterSelector(ctx, objCName)) {
@@ -689,10 +689,8 @@ private:
       // Older Clangs don't support class properties, so print the accessors as
       // well. This is harmless.
       printAbstractFunctionAsMethod(VD->getGetter(), true);
-      if (isSettable) {
-        assert(VD->getSetter() && "settable ObjC property missing setter decl");
-        printAbstractFunctionAsMethod(VD->getSetter(), true);
-      }
+      if (auto setter = VD->getSetter())
+        printAbstractFunctionAsMethod(setter, true);
     } else {
       os << "\n";
     }

@@ -151,22 +151,22 @@ def get_preset_options(substitutions, preset_file_names, preset_name):
             from swift_build_support.targets import StdlibDeploymentTarget
             for sdk in sdks_to_configure:
                 if sdk == "OSX":
-                    tgts += StdlibDeploymentTarget.OSX.targets
+                    tgts += StdlibDeploymentTarget.OSX.allArchs
                 elif sdk == "IOS":
-                    tgts += StdlibDeploymentTarget.iOS.targets
+                    tgts += StdlibDeploymentTarget.iOS.allArchs
                 elif sdk == "IOS_SIMULATOR":
-                    tgts += StdlibDeploymentTarget.iOSSimulator.targets
+                    tgts += StdlibDeploymentTarget.iOSSimulator.allArchs
                 elif sdk == "TVOS":
-                    tgts += StdlibDeploymentTarget.AppleTV.targets
+                    tgts += StdlibDeploymentTarget.AppleTV.allArchs
                 elif sdk == "TVOS_SIMULATOR":
-                    tgts += StdlibDeploymentTarget.AppleTVSimulator.targets
+                    tgts += StdlibDeploymentTarget.AppleTVSimulator.allArchs
                 elif sdk == "WATCHOS":
-                    tgts += StdlibDeploymentTarget.AppleWatch.targets
+                    tgts += StdlibDeploymentTarget.AppleWatch.allArchs
                 elif sdk == "WATCHOS_SIMULATOR":
-                    tgts += StdlibDeploymentTarget.AppleWatchSimulator.targets
+                    tgts += StdlibDeploymentTarget.AppleWatchSimulator.allArchs
 
             build_script_opts.append("--stdlib-deployment-targets=" +
-                                     " ".join([tgt.name for tgt in tgts]))
+                                     " ".join(tgts))
     # Filter the swift-sdks parameter
     build_script_impl_opts = [opt for opt in build_script_impl_opts
                               if not opt.startswith("--swift-sdks")]

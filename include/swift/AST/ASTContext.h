@@ -454,6 +454,15 @@ public:
   FuncDecl *get##Name(LazyResolver *resolver) const;
 #include "swift/AST/KnownDecls.def"
 
+  /// Swift._stdlib_{,ImplicitlyUnwrapped}Optional_isSome.
+  FuncDecl *getOptionalIsSomeDecl(LazyResolver *resolver,
+                                  OptionalTypeKind kind) const;
+
+  /// Retrieve the declaration of
+  /// Swift._stdlib_{,ImplicitlyUnwrapped}Optional_unwrapped.
+  FuncDecl *getOptionalUnwrappedDecl(LazyResolver *resolver,
+                                     OptionalTypeKind kind) const;
+
   /// Check whether the standard library provides all the correct
   /// intrinsic support for Optional<T>.
   ///
@@ -755,7 +764,7 @@ public:
   
   /// \brief Retrieve the substitutions for a bound generic type, if known.
   Optional<ArrayRef<Substitution>>
-  getSubstitutions(TypeBase *type, DeclContext *gpContext) const;
+  getSubstitutions(BoundGenericType *Bound, DeclContext *gpContext) const;
 
   /// Record a conformance loader and its context data for the given
   /// declaration.
@@ -856,10 +865,10 @@ private:
   Optional<StringRef> getBriefComment(const Decl *D);
   void setBriefComment(const Decl *D, StringRef Comment);
 
-  friend class TypeBase;
+  friend class BoundGenericType;
 
   /// \brief Set the substitutions for the given bound generic type.
-  void setSubstitutions(TypeBase *type,
+  void setSubstitutions(BoundGenericType *Bound,
                         DeclContext *gpContext,
                         ArrayRef<Substitution> Subs) const;
 

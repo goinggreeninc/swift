@@ -14,12 +14,12 @@ var WatchKitTests = TestSuite("WatchKit")
 if #available(iOS 8.2, *) {
 // This is a very weak test, but we can't do better without spawning a GUI app.
 WatchKitTests.test("WKInterfaceController/reloadRootControllers(_:)") {
-  WKInterfaceController.reloadRootControllers(withNamesAndContexts: [])
+  WKInterfaceController.reloadRootControllers([])
 }
 
 // This is a very weak test, but we can't do better without spawning a GUI app.
 WatchKitTests.test("WKInterfaceController/presentController(_:)") {
-  let curried = WKInterfaceController.presentController(withNamesAndContexts:)
+  let curried = WKInterfaceController.presentController(_:)
   typealias ExpectedType =
     (WKInterfaceController) -> ([(name: String, context: AnyObject)]) -> Void
   let checkType: ExpectedType = curried
@@ -28,7 +28,7 @@ WatchKitTests.test("WKInterfaceController/presentController(_:)") {
   // FIXME: can't write the following line: rdar://20985062
   // expectType(ExpectedType.self, &curried)
 
-  let curried2 = WKInterfaceController.presentController(withNamesAndContexts:) as ExpectedType
+  let curried2 = WKInterfaceController.presentController as ExpectedType
 }
 
 } // #available(iOS 8.2, *)

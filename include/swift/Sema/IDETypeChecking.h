@@ -88,12 +88,10 @@ namespace swift {
 
   /// \brief Return the type of an expression parsed during code completion, or
   /// None on error.
-  Optional<Type> getTypeOfCompletionContextExpr(
-                   ASTContext &Ctx,
-                   DeclContext *DC,
-                   CompletionTypeCheckKind kind,
-                   Expr *&parsedExpr,
-                   ConcreteDeclRef &referencedDecl);
+  Optional<Type> getTypeOfCompletionContextExpr(ASTContext &Ctx,
+                                                DeclContext *DC,
+                                                CompletionTypeCheckKind kind,
+                                                Expr *&parsedExpr);
 
   /// Typecheck the sequence expression \p parsedExpr for code completion.
   ///

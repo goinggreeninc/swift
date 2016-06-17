@@ -1274,7 +1274,7 @@ void TypeChecker::completePropertyBehaviorStorage(VarDecl *VD,
   
   // Add the witnesses to the conformance.
   ArrayRef<Substitution> MemberSubs;
-  if (DC->isGenericContext()) {
+  if (DC->isGenericTypeContext()) {
     MemberSubs = DC->getGenericParamsOfContext()
                    ->getForwardingSubstitutions(Context);
   }
@@ -1448,7 +1448,7 @@ void TypeChecker::completePropertyBehaviorParameter(VarDecl *VD,
 
   // Add the witnesses to the conformance.
   ArrayRef<Substitution> MemberSubs;
-  if (DC->isGenericContext()) {
+  if (DC->isGenericTypeContext()) {
     MemberSubs = DC->getGenericParamsOfContext()
     ->getForwardingSubstitutions(Context);
   }
@@ -2079,7 +2079,7 @@ swift::createDesignatedInitOverride(TypeChecker &tc,
   //
   // We might have to apply substitutions, if for example we have a declaration
   // like 'class A : B<Int>'.
-  if (superclassDecl->isGenericContext()) {
+  if (superclassDecl->isGenericTypeContext()) {
     if (auto *superclassSig = superclassDecl->getGenericSignatureOfContext()) {
       auto *moduleDecl = classDecl->getParentModule();
       auto subs = superclassTy->gatherAllSubstitutions(
@@ -2127,7 +2127,7 @@ swift::createDesignatedInitOverride(TypeChecker &tc,
   auto selfType = configureImplicitSelf(tc, ctor);
 
   // Set the interface type of the initializer.
-  if (classDecl->isGenericContext()) {
+  if (classDecl->isGenericTypeContext()) {
     ctor->setGenericSignature(classDecl->getGenericSignatureOfContext());
     tc.configureInterfaceType(ctor);
   }

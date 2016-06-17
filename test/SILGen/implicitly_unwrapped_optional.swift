@@ -32,10 +32,8 @@ func wrap<T>(x x: T) -> T! { return x }
 
 // CHECK-LABEL: sil hidden @_TF29implicitly_unwrapped_optional16wrap_then_unwrap
 func wrap_then_unwrap<T>(x x: T) -> T {
-  // CHECK:   switch_enum_addr {{%.*}}, case #ImplicitlyUnwrappedOptional.none!enumelt: [[FAIL:.*]], default [[OK:bb[0-9]+]]
-  // CHECK: [[FAIL]]:
-  // CHECK:   unreachable
-  // CHECK: [[OK]]:
+  // CHECK: [[FORCE:%.*]] = function_ref @_TFs45_stdlib_ImplicitlyUnwrappedOptional_unwrappedurFGSQx_x
+  // CHECK: apply [[FORCE]]<{{.*}}>(%0, {{%.*}})
   return wrap(x: x)!
 }
 

@@ -2283,10 +2283,6 @@ namespace {
         // Set up the C underlying type as its Swift raw type.
         enumDecl->setRawType(underlyingType);
 
-        // Add the C name.
-        addObjCAttribute(enumDecl,
-                         Impl.importIdentifier(decl->getIdentifier()));
-
         // Add protocol declarations to the enum declaration.
         SmallVector<TypeLoc, 2> inheritedTypes;
         inheritedTypes.push_back(TypeLoc::withoutLoc(underlyingType));
@@ -5743,11 +5739,9 @@ namespace {
                                          ImportTypeKind::Abstract,
                                          isInSystemModule(dc),
                                          /*isFullyBridgeable*/false);
-        if (superclassType) {
-          assert(superclassType->is<ClassType>() ||
-                 superclassType->is<BoundGenericClassType>());
-          inheritedTypes.push_back(TypeLoc::withoutLoc(superclassType));
-        }
+        assert(superclassType->is<ClassType>() ||
+               superclassType->is<BoundGenericClassType>());
+        inheritedTypes.push_back(TypeLoc::withoutLoc(superclassType));
       }
       result->setSuperclass(superclassType);
 
@@ -6101,16 +6095,7 @@ clang::SwiftNewtypeAttr *ClangImporter::Implementation::getSwiftNewtypeAttr(
     return nullptr;
 
   // Retrieve the attribute.
-  auto attr = decl->getAttr<clang::SwiftNewtypeAttr>();
-  if (!attr) return nullptr;
-
-  // Blacklist types that temporarily lose their
-  // swift_wrapper/swift_newtype attributes in Foundation.
-  auto name = decl->getName();
-  if (name == "CFErrorDomain")
-    return nullptr;
-
-  return attr;
+  return decl->getAttr<clang::SwiftNewtypeAttr>();
 }
 
 StringRef ClangImporter::Implementation::
@@ -6329,7 +6314,11 @@ void ClangImporter::Implementation::importAttributes(
   }
 
   // Map __attribute__((warn_unused_result)).
-  if (!ClangDecl->hasAttr<clang::WarnUnusedResultAttr>()) {
+  if (ClangDecl->hasAttr<clang::WarnUnusedResultAttr>()) {
+    MappedDecl->getAttrs().add(new (C) WarnUnusedResultAttr(SourceLoc(),
+                                                            SourceLoc(),
+                                                            false));
+  } else {
     if (auto MD = dyn_cast<FuncDecl>(MappedDecl)) {
       if (!MD->getResultType()->isVoid()) {
         MD->getAttrs().add(new (C) DiscardableResultAttr(/*implicit*/true));

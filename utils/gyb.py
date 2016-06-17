@@ -208,7 +208,7 @@ def tokenize_template(template_text):
     ... %% first line
     ...   %% second line
     ... '''):
-    ...     print((kind, text.strip().split('\n',1)[0]))
+    ...     print (kind, text.strip().split('\n',1)[0])
     ('literal', 'This is $some$ literal stuff containing a')
     ('substitutionOpen', '${')
     ('literal', 'followed by a %{...} block:')
@@ -361,7 +361,7 @@ def code_starts_with_dedent_keyword(source_lines):
     >>> code_starts_with_dedent_keyword(split_lines('except ifSomethingElse:'))
     True
     >>> code_starts_with_dedent_keyword(
-    ...     split_lines('\n# comment\nelse: # yes'))
+            split_lines('\n# comment\nelse: # yes'))
     True
     """
     token_text = None
@@ -417,7 +417,7 @@ class ParseContext(object):
         ... literally
         ... ''')
         >>> while ctx.token_kind:
-        ...     print((ctx.token_kind, ctx.code_text or ctx.token_text))
+        ...     print (ctx.token_kind, ctx.code_text or ctx.token_text)
         ...     ignored = ctx.next_token()
         ('literal', '\n')
         ('gybLinesOpen', 'for x in y:\n')
@@ -435,7 +435,7 @@ class ParseContext(object):
         ... THIS SHOULD NOT APPEAR IN THE OUTPUT
         ... ''')
         >>> while ctx.token_kind:
-        ...     print((ctx.token_kind, ctx.code_text or ctx.token_text))
+        ...     print (ctx.token_kind, ctx.code_text or ctx.token_text)
         ...     ignored = ctx.next_token()
         ('literal', 'Nothing\n')
         ('gybLinesOpen', 'if x:\n')
@@ -450,7 +450,7 @@ class ParseContext(object):
         ... '''% for x in [1, 2, 3]:
         ... %   if x == 1:
         ... literal1
-        ... %   elif x > 1:  # add output line here to fix bug
+        ... %   elif x > 1:  # add an output line after this line to fix bug
         ... %     if x == 2:
         ... literal2
         ... %     end
@@ -458,12 +458,12 @@ class ParseContext(object):
         ... % end
         ... ''')
         >>> while ctx.token_kind:
-        ...     print((ctx.token_kind, ctx.code_text or ctx.token_text))
+        ...     print (ctx.token_kind, ctx.code_text or ctx.token_text)
         ...     ignored = ctx.next_token()
         ('gybLinesOpen', 'for x in [1, 2, 3]:\n')
         ('gybLinesOpen', '  if x == 1:\n')
         ('literal', 'literal1\n')
-        ('gybLinesOpen', 'elif x > 1:  # add output line here to fix bug\n')
+        ('gybLinesOpen', 'elif x > 1: # add output line here to fix bug\n')
         ('gybLinesOpen', '  if x == 2:\n')
         ('literal', 'literal2\n')
         ('gybLinesClose', '%     end')
@@ -699,7 +699,6 @@ class Code(ASTNode):
         save_children = context.local_bindings.get('__children__')
         # Execute the code with our __children__ in scope
         context.local_bindings['__children__'] = self.children
-        context.local_bindings['__file__'] = self.filename
         result = eval(self.code, context.local_bindings)
 
         if context.local_bindings['__children__'] is not self.children:
@@ -731,17 +730,17 @@ def parse_template(filename, text=None):
     If text is supplied, it is assumed to be the contents of the file,
     as a string.
 
-    >>> print(parse_template('dummy.file', text=
+    >>> print parse_template('dummy.file', text=
     ... '''% for x in [1, 2, 3]:
     ... %   if x == 1:
     ... literal1
-    ... %   elif x > 1:  # add output line after this line to fix bug
+    ... %   elif x > 1:   # add an output line after this line to fix the bug
     ... %     if x == 2:
     ... literal2
     ... %     end
     ... %   end
     ... % end
-    ... '''))
+    ... ''')
     Block:
     [
         Code:
@@ -756,7 +755,7 @@ def parse_template(filename, text=None):
                 {
                     if x == 1:
                         __children__[0].execute(__context__)
-                    elif x > 1:  # add output line after this line to fix bug
+                    elif x > 1: # add output line after this line to fix bug
                         __children__[1].execute(__context__)
                 }
                 [
@@ -785,9 +784,8 @@ def parse_template(filename, text=None):
         ]
     ]
 
-    >>> print(parse_template(
-    ...     'dummy.file',
-    ...     text='%for x in range(10):\n%  print(x)\n%end\njuicebox'))
+    >>> print parse_template(
+    >>> 'dummy.file', text='%for x in range(10):\n%  print x\n%end\njuicebox')
     Block:
     [
         Code:
@@ -798,14 +796,14 @@ def parse_template(filename, text=None):
         [
             Block:
             [
-                Code: {print(x)} []
+                Code: {print x} []
             ]
         ]
         Literal:
         juicebox
     ]
 
-    >>> print(parse_template('/dummy.file', text=
+    >>> print parse_template('/dummy.file', text=
     ... '''Nothing
     ... % if x:
     ... %    for i in range(3):
@@ -813,7 +811,7 @@ def parse_template(filename, text=None):
     ... %    end
     ... % else:
     ... THIS SHOULD NOT APPEAR IN THE OUTPUT
-    ... '''))
+    ... ''')
     Block:
     [
         Literal:
@@ -850,10 +848,10 @@ def parse_template(filename, text=None):
         ]
     ]
 
-    >>> print(parse_template('dummy.file', text='''%
+    >>> print parse_template('dummy.file', text='''%
     ... %for x in y:
-    ... %    print(y)
-    ... '''))
+    ... %    print y
+    ... ''')
     Block:
     [
         Code:
@@ -864,18 +862,18 @@ def parse_template(filename, text=None):
         [
             Block:
             [
-                Code: {print(y)} []
+                Code: {print y} []
             ]
         ]
     ]
 
-    >>> print(parse_template('dummy.file', text='''%
+    >>> print parse_template('dummy.file', text='''%
     ... %if x:
-    ... %    print(y)
+    ... %    print y
     ... AAAA
     ... %else:
     ... BBBB
-    ... '''))
+    ... ''')
     Block:
     [
         Code:
@@ -888,7 +886,7 @@ def parse_template(filename, text=None):
         [
             Block:
             [
-                Code: {print(y)} []
+                Code: {print y} []
                 Literal:
                 AAAA
             ]
@@ -900,14 +898,14 @@ def parse_template(filename, text=None):
         ]
     ]
 
-    >>> print(parse_template('dummy.file', text='''%
+    >>> print parse_template('dummy.file', text='''%
     ... %if x:
-    ... %    print(y)
+    ... %    print y
     ... AAAA
     ... %# This is a comment
     ... %else:
     ... BBBB
-    ... '''))
+    ... ''')
     Block:
     [
         Code:
@@ -921,7 +919,7 @@ def parse_template(filename, text=None):
         [
             Block:
             [
-                Code: {print(y)} []
+                Code: {print y} []
                 Literal:
                 AAAA
             ]
@@ -933,14 +931,14 @@ def parse_template(filename, text=None):
         ]
     ]
 
-    >>> print(parse_template('dummy.file', text='''\
+    >>> print parse_template('dummy.file', text='''\
     ... %for x in y:
     ... AAAA
     ... %if x:
     ... BBBB
     ... %end
     ... CCCC
-    ... '''))
+    ... ''')
     Block:
     [
         Code:
@@ -988,8 +986,7 @@ def execute_template(ast, line_directive='', **local_bindings):
     ... % else:
     ... THIS SHOULD NOT APPEAR IN THE OUTPUT
     ... ''')
-    >>> out = execute_template(ast, line_directive='//#sourceLocation', x=1)
-    >>> print(out, end="")
+    >>> print execute_template(ast, line_directive='//#sourceLocation', x=1),
     //#sourceLocation(file: "/dummy.file", line: 1)
     Nothing
     //#sourceLocation(file: "/dummy.file", line: 4)
@@ -1007,8 +1004,7 @@ def execute_template(ast, line_directive='', **local_bindings):
     ... % end
     ... ${a}
     ... ''')
-    >>> out = execute_template(ast, line_directive='//#sourceLocation', x=1)
-    >>> print(out, end="")
+    >>> print execute_template(ast, line_directive='//#sourceLocation', x=1),
     //#sourceLocation(file: "/dummy.file", line: 1)
     Nothing
     //#sourceLocation(file: "/dummy.file", line: 6)
@@ -1116,8 +1112,7 @@ def main():
 
     if args.test or args.verbose_test:
         import doctest
-        selfmod = sys.modules[__name__]
-        if doctest.testmod(selfmod, verbose=args.verbose_test).failed:
+        if doctest.testmod(verbose=args.verbose_test).failed:
             sys.exit(1)
 
     bindings = dict(x.split('=', 1) for x in args.defines)

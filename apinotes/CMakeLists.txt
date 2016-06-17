@@ -1,31 +1,21 @@
 set(SWIFT_API_NOTES_INPUTS
-  AVFoundation
   AppKit
-  AudioToolbox
+  AVFoundation
   CoreData
   CoreGraphics
   CoreLocation
-  CoreText
   Dispatch
   Foundation
   GameKit
   HomeKit
-  MediaPlayer
   NotificationCenter
   ObjectiveC
-  PassKit
-  QuartzCore
-  QuickLook
   SpriteKit
-  StoreKit
   TVMLKit
   TVServices
   UIKit
   WatchKit
-  WebKit
-  XCTest
-  XPC
-)
+  WebKit)
 
 if(NOT DEFINED SWIFT_API_NOTES_PATH)
   message(FATAL_ERROR "Define SWIFT_API_NOTES_PATH before including this file")

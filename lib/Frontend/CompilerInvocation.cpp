@@ -740,9 +740,6 @@ static bool ParseLangArgs(LangOptions &Opts, ArgList &Args,
   Opts.EnableExperimentalPropertyBehaviors |=
     Args.hasArg(OPT_enable_experimental_property_behaviors);
 
-  Opts.EnableExperimentalNestedGenericTypes |=
-    Args.hasArg(OPT_enable_experimental_nested_generic_types);
-
   Opts.DisableAvailabilityChecking |=
       Args.hasArg(OPT_disable_availability_checking);
   

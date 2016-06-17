@@ -85,7 +85,7 @@ print("NSError out:")
 autoreleasepool {
   do {
     let s = try NSString(contentsOfFile: "/hopefully/does/not/exist\u{1B}",
-                         encoding: String.Encoding.utf8.rawValue)
+                         encoding: NSUTF8StringEncoding)
     _preconditionFailure("file should not actually exist")
   } catch {
     print(error._code) // CHECK-NEXT: 260
@@ -98,7 +98,7 @@ class DumbString: NSString {
   override func character(at x: Int) -> unichar { _preconditionFailure("nope") }
   override var length: Int { return 0 }
 
-  convenience init(contentsOfFile s: String, encoding: String.Encoding) throws {
+  convenience init(contentsOfFile s: String, encoding: NSStringEncoding) throws {
     self.init()
     throw NSError(domain: "Malicious Mischief", code: 594, userInfo: nil)
   }
@@ -108,7 +108,7 @@ class DumbString: NSString {
 print("NSError in:")
 autoreleasepool {
   do {
-    try DumbString(contentsOfFile: "foo", encoding: .utf8)
+    try DumbString(contentsOfFile: "foo", encoding: NSUTF8StringEncoding)
   } catch {
     print(error._domain) // CHECK-NEXT: Malicious Mischief
     print(error._code) // CHECK-NEXT: 594

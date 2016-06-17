@@ -18,8 +18,6 @@
 #ifndef SWIFT_RUNTIME_MUTEX_WIN32_H
 #define SWIFT_RUNTIME_MUTEX_WIN32_H
 
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
 #include <windows.h>
 
 namespace swift {
@@ -28,9 +26,9 @@ typedef CONDITION_VARIABLE ConditionHandle;
 typedef SRWLOCK MutexHandle;
 typedef SRWLOCK ReadWriteLockHandle;
 
-#define SWIFT_CONDITION_SUPPORTS_CONSTEXPR 1
-#define SWIFT_MUTEX_SUPPORTS_CONSTEXPR 1
-#define SWIFT_READWRITELOCK_SUPPORTS_CONSTEXPR 1
+#define CONDITION_SUPPORTS_CONSTEXPR 1
+#define MUTEX_SUPPORTS_CONSTEXPR 1
+#define READWRITELOCK_SUPPORTS_CONSTEXPR 1
 
 struct ConditionPlatformHelper {
   static constexpr ConditionHandle staticInit() {

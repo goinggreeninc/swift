@@ -13,25 +13,21 @@ defer { runAllTests() }
 var DispatchAPI = TestSuite("DispatchAPI")
 
 DispatchAPI.test("constants") {
-  expectEqual(2147483648, DispatchSource.ProcessEvent.exit.rawValue)
-  expectEqual(0, DispatchData.empty.endIndex)
+  expectEqual(2147483648, DISPATCH_PROC_EXIT)
+  expectEqual("<>", dispatch_data_empty.description)
 
   // This is a lousy test, but really we just care that
   // DISPATCH_QUEUE_CONCURRENT comes through at all.
-  _ = DispatchQueueAttributes.concurrent
+  _ = DISPATCH_QUEUE_CONCURRENT as AnyObject
+  _ = DISPATCH_QUEUE_CONCURRENT.description
 }
 
 DispatchAPI.test("OS_OBJECT support") {
-  let mainQueue = DispatchQueue.main as AnyObject
-  expectTrue(mainQueue is DispatchQueue)
+  let mainQueue = dispatch_get_main_queue() as AnyObject
+  expectTrue(mainQueue is dispatch_queue_t)
 
   // This should not be optimized out, and should succeed.
-  expectNotEmpty(mainQueue as? DispatchQueue)
-}
-
-DispatchAPI.test("DispatchGroup creation") {
-  let group = DispatchGroup()
-  expectNotEmpty(group)
+  expectNotEmpty(mainQueue as? dispatch_queue_t)
 }
 
 DispatchAPI.test("dispatch_block_t conversions") {
@@ -40,8 +36,7 @@ DispatchAPI.test("dispatch_block_t conversions") {
     counter += 1
   }
 
-  typealias Block = @convention(block) () -> ()
-  let block = closure as Block
+  let block = closure as dispatch_block_t
   block()
   expectEqual(1, counter)
 
@@ -52,12 +47,30 @@ DispatchAPI.test("dispatch_block_t conversions") {
 
 if #available(OSX 10.10, iOS 8.0, *) {
   DispatchAPI.test("dispatch_block_t identity") {
-    let block = DispatchWorkItem(flags: .inheritQoS) {
+    let block: dispatch_block_t = dispatch_block_create(DISPATCH_BLOCK_INHERIT_QOS_CLASS) {
       _ = 1
     }
 
-    DispatchQueue.main.asynchronously(execute: block)
+    dispatch_async(dispatch_get_main_queue(), block)
     // This will trap if the block's pointer identity is not preserved.
-    block.cancel()
+    dispatch_block_cancel(block)
+  }
+
+  DispatchAPI.test("dispatch_block_t conversions with dispatch_block_create") {
+    var counter = 0
+
+    let block: dispatch_block_t = dispatch_block_create(dispatch_block_flags_t(0)) {
+      counter += 1
+    }
+    block()
+    expectEqual(1, counter)
+
+    let closure = block as () -> Void
+    closure()
+    expectEqual(2, counter)
+
+    let blockAgain = closure as dispatch_block_t
+    blockAgain()
+    expectEqual(3, counter)
   }
 }

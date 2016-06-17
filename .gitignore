@@ -13,7 +13,7 @@
 *~
 # Merge files created by git.
 *.orig
-# Byte compiled Python modules.
+# Byte compiled python modules.
 *.pyc
 # vim swap files
 .*.sw[a-z]

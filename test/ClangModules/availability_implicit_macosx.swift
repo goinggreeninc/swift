@@ -17,23 +17,23 @@ func useClassThatTriggersImportOfDeprecatedEnum() {
   // when importing deprecated enums do not themselves trigger deprecation
   // warnings in the synthesized code.
 
-  _ = ClassWithDeprecatedOptionsInMethodSignature.sharedInstance()
+  _ = NSClassWithDeprecatedOptionsInMethodSignature.sharedInstance()
 }
 
 func useClassThatTriggersImportOExplicitlyUnavailableOptions() {
-  _ = ClassWithPotentiallyUnavailableOptionsInMethodSignature.sharedInstance()
+  _ = NSClassWithPotentiallyUnavailableOptionsInMethodSignature.sharedInstance()
 }
 
 func useClassThatTriggersImportOfPotentiallyUnavailableOptions() {
-  _ = ClassWithExplicitlyUnavailableOptionsInMethodSignature.sharedInstance()
+  _ = NSClassWithExplicitlyUnavailableOptionsInMethodSignature.sharedInstance()
 }
 
 func directUseShouldStillTriggerDeprecationWarning() {
-  _ = DeprecatedOptions.first // expected-warning {{'DeprecatedOptions' was deprecated in OS X 10.51: Use a different API}}
-  _ = DeprecatedEnum.first    // expected-warning {{'DeprecatedEnum' was deprecated in OS X 10.51: Use a different API}}
+  _ = NSDeprecatedOptions.first // expected-warning {{'NSDeprecatedOptions' was deprecated in OS X 10.51: Use a different API}}
+  _ = NSDeprecatedEnum.first    // expected-warning {{'NSDeprecatedEnum' was deprecated in OS X 10.51: Use a different API}}
 }
 
-func useInSignature(_ options: DeprecatedOptions) { // expected-warning {{'DeprecatedOptions' was deprecated in OS X 10.51: Use a different API}}
+func useInSignature(_ options: NSDeprecatedOptions) { // expected-warning {{'NSDeprecatedOptions' was deprecated in OS X 10.51: Use a different API}}
 }
 
 class SuperClassWithDeprecatedInitializer {

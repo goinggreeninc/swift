@@ -23,7 +23,7 @@ func forwardOptional<T>(_ t: T!) -> T {
 }
 
 WeakReferenceRaceTests.test("class instance property [SR-192] (copy)") {
-  let q = DispatchQueue(label: "", attributes: .concurrent)
+  let q = forwardOptional(dispatch_queue_create("", DISPATCH_QUEUE_CONCURRENT))
 
   // Capture a weak reference via its container object
   // "https://bugs.swift.org/browse/SR-192"
@@ -35,15 +35,15 @@ WeakReferenceRaceTests.test("class instance property [SR-192] (copy)") {
       _blackHole(nbox)
     }
 
-    q.asynchronously(execute: closure)
-    q.asynchronously(execute: closure)
+    dispatch_async(q, closure)
+    dispatch_async(q, closure)
   }
 
-  q.asynchronously(flags: .barrier) {}
+  dispatch_barrier_sync(q) {}
 }
 
 WeakReferenceRaceTests.test("class instance property [SR-192] (load)") {
-  let q = DispatchQueue(label: "", attributes: .concurrent)
+  let q = forwardOptional(dispatch_queue_create("", DISPATCH_QUEUE_CONCURRENT))
 
   // Capture a weak reference via its container object
   // "https://bugs.swift.org/browse/SR-192"
@@ -55,15 +55,15 @@ WeakReferenceRaceTests.test("class instance property [SR-192] (load)") {
       }
     }
 
-    q.asynchronously(execute: closure)
-    q.asynchronously(execute: closure)
+    dispatch_async(q, closure)
+    dispatch_async(q, closure)
   }
-
-  q.asynchronously(flags: .barrier) {}
+  
+  dispatch_barrier_sync(q) {}
 }
 
 WeakReferenceRaceTests.test("direct capture (copy)") {
-  let q = DispatchQueue(label: "", attributes: .concurrent)
+  let q = forwardOptional(dispatch_queue_create("", DISPATCH_QUEUE_CONCURRENT))
 
   // Capture a weak reference directly in multiple closures
   for i in 1...iterations {
@@ -74,15 +74,15 @@ WeakReferenceRaceTests.test("direct capture (copy)") {
       _blackHole(nbox)
     }
 
-    q.asynchronously(execute: closure)
-    q.asynchronously(execute: closure)
+    dispatch_async(q, closure)
+    dispatch_async(q, closure)
   }
 
-  q.asynchronously(flags: .barrier) {}
+  dispatch_barrier_sync(q) {}
 }
 
 WeakReferenceRaceTests.test("direct capture (load)") {
-  let q = DispatchQueue(label: "", attributes: .concurrent)
+  let q = forwardOptional(dispatch_queue_create("", DISPATCH_QUEUE_CONCURRENT))
 
   // Capture a weak reference directly in multiple closures
   for i in 1...iterations {
@@ -93,11 +93,11 @@ WeakReferenceRaceTests.test("direct capture (load)") {
       }
     }
 
-    q.asynchronously(execute: closure)
-    q.asynchronously(execute: closure)
+    dispatch_async(q, closure)
+    dispatch_async(q, closure)
   }
 
-  q.asynchronously(flags: .barrier) {}
+  dispatch_barrier_sync(q) {}
 }
 
 runAllTests()

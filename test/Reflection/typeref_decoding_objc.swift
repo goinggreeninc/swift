@@ -42,7 +42,7 @@
 // CHECK: rect: __C.CGRect
 // CHECK: (struct __C.CGRect)
 
-// CHECK: __ObjC.Bundle
+// CHECK: __ObjC.NSBundle
 // CHECK: ---------------
 // CHECK: __ObjC.NSURL
 // CHECK: ------------
@@ -71,6 +71,6 @@
 // CHECK-NEXT: ====================
 
 // CHECK:      - Capture types:
-// CHECK-NEXT: (class __ObjC.Bundle)
+// CHECK-NEXT: (class __ObjC.NSBundle)
 // CHECK-NEXT: (protocol __ObjC.NSCoding)
 // CHECK-NEXT: - Metadata sources:

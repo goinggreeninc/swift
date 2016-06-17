@@ -1,5 +1,3 @@
-// XFAIL: broken_std_regex
-
 class Foo {}
 class Base {
   init() {}

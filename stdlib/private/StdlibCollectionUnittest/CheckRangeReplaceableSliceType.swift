@@ -65,7 +65,7 @@ extension TestSuite {
       return makeCollection(elements.map(wrapValue))
     }
 
-    testNamePrefix += String(C.Type.self)
+    testNamePrefix += String(C.Type)
 
     //===------------------------------------------------------------------===//
     // removeFirst()
@@ -210,7 +210,7 @@ extension TestSuite {
       return makeCollection(elements.map(wrapValue))
     }
 
-    testNamePrefix += String(C.Type.self)
+    testNamePrefix += String(C.Type)
 
     //===------------------------------------------------------------------===//
     // removeLast()
@@ -351,7 +351,7 @@ extension TestSuite {
       resiliencyChecks: resiliencyChecks,
       outOfBoundsIndexOffset: outOfBoundsIndexOffset)
 
-    testNamePrefix += String(C.Type.self)
+    testNamePrefix += String(C.Type)
 
     // No tests yet.
   } // addRangeReplaceableRandomAccessSliceTests

@@ -391,10 +391,18 @@ public:
 
   void setSubstitutions(SILGenFunction &gen,
                         SILLocation loc,
-                        ArrayRef<Substitution> newSubs) {
+                        ArrayRef<Substitution> newSubs,
+                        unsigned callDepth) {
+    // Currently generic methods of generic types are the deepest we should
+    // be able to stack specializations.
+    // FIXME: Generic local functions can add type parameters to arbitrary
+    // depth.
+    assert(callDepth < 2 && "specialization below 'self' or argument depth?!");
     assert(Substitutions.empty() && "Already have substitutions?");
     Substitutions = newSubs;
 
+    assert(getNaturalUncurryLevel() >= callDepth
+           && "specializations below uncurry level?!");
     SpecializeLoc = loc;
     HasSubstitutions = true;
   }
@@ -800,6 +808,13 @@ public:
   std::vector<ApplyExpr*> CallSites;
   Expr *SideEffect = nullptr;
 
+  /// The depth of uncurries that we have seen.
+  ///
+  /// *NOTE* This counter is incremented *after* we return from visiting a call
+  /// site's children. This means that it is not valid until we finish visiting
+  /// the expression.
+  unsigned CallDepth = 0;
+
   /// When visiting expressions, sometimes we need to emit self before we know
   /// what the actual callee is. In such cases, we assume that we are passing
   /// self at +0 and then after we know what the callee is, we check if the
@@ -811,6 +826,8 @@ public:
   {}
 
   void setCallee(Callee &&c) {
+    assert((SelfParam ? CallDepth == 1 : CallDepth == 0)
+           && "setting callee at non-zero call depth?!");
     assert(!ApplyCallee && "already set callee!");
     ApplyCallee.emplace(std::move(c));
   }
@@ -825,12 +842,14 @@ public:
     SelfParam = std::move(theSelfParam);
     SelfApplyExpr = theSelfApplyExpr;
     SelfType = theSelfApplyExpr->getType();
+    ++CallDepth;
   }
   void setSelfParam(ArgumentSource &&theSelfParam, Type selfType) {
     assert(!SelfParam && "already set this!");
     SelfParam = std::move(theSelfParam);
     SelfApplyExpr = nullptr;
     SelfType = selfType;
+    ++CallDepth;
   }
 
   void decompose(Expr *e) {
@@ -914,6 +933,7 @@ public:
       CallSites.push_back(e);
       visit(e->getFn());
     }
+    ++CallDepth;
   }
 
   /// Given a metatype value for the type, allocate an Objective-C
@@ -1021,8 +1041,9 @@ public:
         setCallee(std::move(theCallee));
 
         // If there are substitutions, add them now.
-        if (!subs.empty())
-          ApplyCallee->setSubstitutions(SGF, e, subs);
+        if (!subs.empty()) {
+          ApplyCallee->setSubstitutions(SGF, e, subs, CallDepth);
+        }
 
         return;
       }
@@ -1104,10 +1125,15 @@ public:
         setCallee(Callee::forClassMethod(SGF, selfValue,
                                          constant, getSubstFnType(), e));
 
+        // setSelfParam bumps the callDepth, but we aren't really past the
+        // 'self' call depth in this case.
+        --CallDepth;
+
         // If there are substitutions, add them.
         if (e->getDeclRef().isSpecialized()) {
           ApplyCallee->setSubstitutions(SGF, e,
-                                        e->getDeclRef().getSubstitutions());
+                                        e->getDeclRef().getSubstitutions(),
+                                        CallDepth);
         }
 
         return;
@@ -1143,8 +1169,9 @@ public:
     }
 
     ArrayRef<Substitution> subs;
-    if (e->getDeclRef().isSpecialized())
+    if (e->getDeclRef().isSpecialized()) {
       subs = e->getDeclRef().getSubstitutions();
+    }
 
     // Enum case constructor references are open-coded.
     if (isa<EnumElementDecl>(e->getDecl()))
@@ -1164,14 +1191,15 @@ public:
                          captures);
         ApplyCallee->setCaptures(std::move(captures));
       }
+
+      if (subs.empty() && afd->getCaptureInfo().hasGenericParamCaptures()) {
+        subs = SGF.getForwardingSubstitutions();
+      }
     }
 
-    // If there are substitutions, add them.
-    if (!subs.empty() &&
-        (!afd ||
-         !afd->getDeclContext()->isLocalContext() ||
-         afd->getCaptureInfo().hasGenericParamCaptures()))
-      ApplyCallee->setSubstitutions(SGF, e, subs);
+    // If there are substitutions, add them, always at depth 0.
+    if (!subs.empty())
+      ApplyCallee->setSubstitutions(SGF, e, subs, 0);
   }
   
   void visitAbstractClosureExpr(AbstractClosureExpr *e) {
@@ -1216,9 +1244,9 @@ public:
                        captures);
       ApplyCallee->setCaptures(std::move(captures));
     }
-    // If there are substitutions, add them.
+    // If there are substitutions, add them, always at depth 0.
     if (!subs.empty())
-      ApplyCallee->setSubstitutions(SGF, e, subs);
+      ApplyCallee->setSubstitutions(SGF, e, subs, 0);
   }
   
   void visitOtherConstructorDeclRefExpr(OtherConstructorDeclRefExpr *e) {
@@ -1231,7 +1259,8 @@ public:
 
     // If there are substitutions, add them.
     if (e->getDeclRef().isSpecialized())
-      ApplyCallee->setSubstitutions(SGF, e, e->getDeclRef().getSubstitutions());
+      ApplyCallee->setSubstitutions(SGF, e, e->getDeclRef().getSubstitutions(),
+                                    CallDepth);
   }
   void visitDotSyntaxBaseIgnoredExpr(DotSyntaxBaseIgnoredExpr *e) {
     setSideEffect(e->getLHS());
@@ -1299,7 +1328,7 @@ public:
 
     // If there are any substitutions for the callee, apply them now.
     if (!substitutions.empty())
-      ApplyCallee->setSubstitutions(SGF, fn, substitutions);
+      ApplyCallee->setSubstitutions(SGF, fn, substitutions, CallDepth-1);
   }
 
   /// Walk the given \c selfArg expression that produces the appropriate
@@ -1491,7 +1520,8 @@ public:
     // Set up the substitutions, if we have any.
     if (ctorRef->getDeclRef().isSpecialized())
       ApplyCallee->setSubstitutions(SGF, fn,
-                                    ctorRef->getDeclRef().getSubstitutions());
+                               ctorRef->getDeclRef().getSubstitutions(),
+                               CallDepth-1);
 
     return true;
   }
@@ -4238,7 +4268,7 @@ SILGenFunction::emitApplyOfLibraryIntrinsic(SILLocation loc,
   }
 
   auto callee = Callee::forDirect(*this, SILDeclRef(fn), substFormalType, loc);
-  callee.setSubstitutions(*this, loc, subs);
+  callee.setSubstitutions(*this, loc, subs, 0);
 
   ManagedValue mv;
   CanSILFunctionType substFnType;
@@ -4410,7 +4440,7 @@ emitSpecializedAccessorFunctionRef(SILGenFunction &gen,
   // FIXME: Generic subscript operator could add another layer of
   // substitutions.
   if (!substitutions.empty()) {
-    callee.setSubstitutions(gen, loc, substitutions);
+    callee.setSubstitutions(gen, loc, substitutions, 0);
   }
   return callee;
 }

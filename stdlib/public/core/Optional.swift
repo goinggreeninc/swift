@@ -286,16 +286,27 @@ extension Optional : CustomReflectable {
 
 @_transparent
 public // COMPILER_INTRINSIC
-func _diagnoseUnexpectedNilOptional(_filenameStart: Builtin.RawPointer,
-                                    _filenameLength: Builtin.Word,
-                                    _filenameIsASCII: Builtin.Int1,
-                                    _line: Builtin.Word) {
+func _stdlib_Optional_isSome<Wrapped>(_ `self`: Wrapped?) -> Bool {
+  return `self` != nil
+}
+
+@_transparent
+public // COMPILER_INTRINSIC
+func _stdlib_Optional_unwrapped<Wrapped>(_ `self`: Wrapped?) -> Wrapped {
+  switch `self` {
+  case let wrapped?:
+    return wrapped
+  case .none:
+    _preconditionFailure(
+      "unexpectedly found nil while unwrapping an Optional value")
+  }
+}
+
+@_transparent
+public // COMPILER_INTRINSIC
+func _diagnoseUnexpectedNilOptional() {
   _preconditionFailure(
-    "unexpectedly found nil while unwrapping an Optional value",
-    file: StaticString(_start: _filenameStart,
-                       utf8CodeUnitCount: _filenameLength,
-                       isASCII: _filenameIsASCII),
-    line: UInt(_line))
+    "unexpectedly found nil while unwrapping an Optional value")
 }
 
 public func == <T: Equatable> (lhs: T?, rhs: T?) -> Bool {

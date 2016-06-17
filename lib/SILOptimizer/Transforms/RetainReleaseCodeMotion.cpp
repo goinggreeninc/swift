@@ -94,7 +94,6 @@ STATISTIC(NumRetainsSunk, "Number of retains sunk");
 STATISTIC(NumReleasesHoisted, "Number of releases hoisted");
 
 llvm::cl::opt<bool> DisableRRCodeMotion("disable-rr-cm", llvm::cl::init(false));
-llvm::cl::opt<bool> DisableIfWithCriticalEdge("disable-with-critical-edge", llvm::cl::init(false));
 
 //===----------------------------------------------------------------------===//
 //                             Utility 
@@ -1004,11 +1003,6 @@ public:
     // Respect function no.optimize.
     SILFunction *F = getFunction();
     if (!F->shouldOptimize())
-      return;
-
-    // Return if there is critical edge and we are disabling critical edge
-    // splitting.
-    if (DisableIfWithCriticalEdge && hasCriticalEdges(*F, false))
       return;
 
     DEBUG(llvm::dbgs() << "*** RRCM on function: " << F->getName() << " ***\n");

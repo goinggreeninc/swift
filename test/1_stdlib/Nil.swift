@@ -25,7 +25,7 @@ if unsafeNil == nil {
 }
 
 do {
-  try FileManager.`default`().removeItem(at: URL(string:"/this/file/does/not/exist")!)
+  try NSFileManager.`default`().removeItem(at: NSURL(string:"/this/file/does/not/exist")!)
 } catch {
   print("ok !removed")
   // CHECK: ok !removed

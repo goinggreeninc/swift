@@ -662,31 +662,34 @@ void Module::getDisplayDecls(SmallVectorImpl<Decl*> &Results) const {
   FORWARD(getDisplayDecls, (Results));
 }
 
-ArrayRef<Substitution>
-TypeBase::gatherAllSubstitutions(Module *module,
-                                 LazyResolver *resolver,
-                                 DeclContext *gpContext) {
+DeclContext *BoundGenericType::getGenericParamContext(
+               DeclContext *gpContext) const {
+  // If no context was provided, use the declaration itself.
+  if (!gpContext)
+    return getDecl();
+
+  assert(gpContext->getAsNominalTypeOrNominalTypeExtensionContext() == getDecl() &&
+         "not a valid context");
+  return gpContext;
+}
+
+ArrayRef<Substitution> BoundGenericType::getSubstitutions(
+                                           Module *module,
+                                           LazyResolver *resolver,
+                                           DeclContext *gpContext) {
   // FIXME: If there is no module, infer one. This is a hack for callers that
   // don't have access to the module. It will have to go away once we're
   // properly differentiating bound generic types based on the protocol
   // conformances visible from a given module.
   if (!module) {
-    module = getAnyNominal()->getParentModule();
+    module = getDecl()->getParentModule();
   }
 
   // Check the context, introducing the default if needed.
-  if (!gpContext)
-    gpContext = getAnyNominal();
-
-  assert(gpContext->getAsNominalTypeOrNominalTypeExtensionContext()
-         == getAnyNominal() && "not a valid context");
-
-  auto *genericParams = gpContext->getGenericParamsOfContext();
-  if (!genericParams)
-    return { };
+  gpContext = getGenericParamContext(gpContext);
 
   // If we already have a cached copy of the substitutions, return them.
-  auto *canon = getCanonicalType().getPointer();
+  auto *canon = getCanonicalType()->castTo<BoundGenericType>();
   const ASTContext &ctx = canon->getASTContext();
   if (auto known = ctx.getSubstitutions(canon, gpContext))
     return *known;
@@ -694,8 +697,6 @@ TypeBase::gatherAllSubstitutions(Module *module,
   // Compute the set of substitutions.
   TypeSubstitutionMap substitutions;
 
-  // The type itself contains substitutions up to the innermost
-  // non-type context.
   CanType parent(canon);
   auto *parentDC = gpContext;
   while (parent) {
@@ -726,14 +727,9 @@ TypeBase::gatherAllSubstitutions(Module *module,
     llvm_unreachable("Not a nominal or bound generic type");
   }
 
-  // Add forwarding substitutions from the outer context if we have
-  // a type nested inside a generic function.
-  if (auto *outerGenericParams = parentDC->getGenericParamsOfContext()) {
-    for (auto archetype : outerGenericParams->getAllNestedArchetypes())
-      substitutions[archetype] = archetype;
-  }
-
   // Collect all of the archetypes.
+  auto *genericParams = gpContext->getGenericParamsOfContext();
+
   SmallVector<ArchetypeType *, 2> allArchetypesList;
   ArrayRef<ArchetypeType *> allArchetypes = genericParams->getAllArchetypes();
   if (genericParams->getOuterParameters()) {

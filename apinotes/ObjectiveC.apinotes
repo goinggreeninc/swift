@@ -20,7 +20,6 @@ Classes:
     - O
     NullabilityOfRet: S
 - Name: NSObject
-  SwiftName: NSObject
   Methods:
   - Selector: alloc
     MethodKind: Class
@@ -96,7 +95,6 @@ Classes:
     NullabilityOfRet: S
 Protocols:
 - Name: NSObject
-  SwiftName: NSObjectProtocol
   Methods:
   - Selector: class
     MethodKind: Instance
@@ -132,7 +130,3 @@ Protocols:
     Nullability: N
   - Name: superclass
     Nullability: O
-Tags:
-- Name: _NSZone
-  SwiftName: _NSZone
-
